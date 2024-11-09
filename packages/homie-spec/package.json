@@ -1,0 +1,8 @@
+{
+  "name": "homie-spec",
+  "version": "5.0.0",
+  "description": "Typescript definitions for the Homie MQTT convention",
+  "keywords": [],
+  "author": "Niklas Stadigs",
+  "license": "ISC"
+}
