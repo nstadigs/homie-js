@@ -228,6 +228,26 @@ export type DateTimeProperty = PropertyBase & {
   format: `${number}-${number}-${number}T${number}:${number}:${number}Z`;
 };
 
+export type DurationProperty = PropertyBase & {
+  datatype: "duration";
+
+  /**
+   * Duration payloads must use the ISO 8601 duration format
+   *
+   * The format is PTxHxMxS, where:
+   *  P: Indicates a period/duration (required).
+   *  T: Indicates a time (required).
+   *  xH: Hours, where x represents the number of hours (optional).
+   *  xM: Minutes, where x represents the number of minutes (optional).
+   *  xS: Seconds, where x represents the number of seconds (optional).
+   *
+   * Examples: PT12H5M46S (12 hours, 5 minutes, 46 seconds), PT5M (5 minutes)
+   *
+   * An empty string ("") is not a valid payload
+   */
+  format: `PT${`${number}H` | ""}${`${number}M` | ""}${`${number}S` | "" | ""}`;
+};
+
 export type JSONProperty = PropertyBase & {
   datatype: "json";
 
@@ -313,4 +333,6 @@ export type Property =
   | EnumProperty
   | ColorProperty
   | BooleanProperty
+  | DateTimeProperty
+  | DurationProperty
   | JSONProperty;

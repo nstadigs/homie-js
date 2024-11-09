@@ -1,4 +1,5 @@
 import { mqtt_v4, MQTTClient_v4 } from "u8-mqtt";
+import { DeviceDescription, DeviceState } from "homie-spec";
 
 class Client {
   private mqtt: MQTTClient_v4;
@@ -44,9 +45,16 @@ class Device {
     };
   }
 
-  createChild(props) {
+  createChildDevice(props) {
     this.children.add(child);
   }
+
+  createNode(props) {
+    const node = new Node(props);
+    this.nodes.push(node);
+  }
+
+  announce() {}
 }
 
 class RootDevice extends Device {
@@ -63,8 +71,12 @@ class RootDevice extends Device {
     this.client.subscribe();
     this.client.onSub();
   }
+
+  addDevice(device: Device) {
+    this.children.add(device);
+  }
 }
 
-export function createRootDevice() {
+export function createRootDevice(url: string) {
   return new RootDevice();
 }
