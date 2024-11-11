@@ -1,25 +1,32 @@
-import { mqtt_v4, MQTTClient_v4 } from "u8-mqtt";
+import { mqtt_v5, MQTTClient_v5 } from "u8-mqtt";
 import { DeviceDescription, DeviceState } from "homie-spec";
 
 class Client {
-  private mqtt: MQTTClient_v4;
+  private mqtt: MQTTClient_v5;
 
   constructor() {
-    this.mqtt = mqtt_v4({});
+    this.mqtt = mqtt_v5({});
   }
 
-  connect() {
+  connect(url: string) {
+    if (url.startsWith("ws")) {
+      this.mqtt.with_websock(url);
+    } else if (url.startsWith("mqtts")) {
+      this.mqtt.with_tls(url);
+    } else if (url.startsWith("mqtt")) {
+      this.mqtt.with_tcp(url);
+    } else {
+      throw new Error("Not supported");
+    }
+
     this.mqtt.connect("ws://localhost:8080/mqtt");
   }
 
-  subscribe() {
-    this.mqtt.subscribe_topic("my_topic");
-  }
+  subscribe(topic: string, callback: (topic: string, payload: string) => void) {
+    this.mqtt.subscribe_topic(topic, callback);
 
-  onSub() {
-    this.mqtt.on_sub((topic: string, payload: string) => {
-      console.log(`Received message from ${topic}: ${payload}`);
-    });
+    return () => {
+      this.mqtt.unsubscribe_topic(topic, callback);
   }
 }
 
@@ -29,11 +36,9 @@ class Device {
   state: DeviceState = "init";
   log: string | null = null;
 
-  constructor() {
-    this.client = new Client();
-  }
+  constructor() {}
 
-  getDesctiption(): DeviceDescription {
+  get description(): DeviceDescription {
     return {
       homie: "5.0",
       version: "1.0.0",
