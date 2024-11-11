@@ -3,12 +3,13 @@
 Idea is this:
 
 - Integrate with any mqtt-client
+  - Provide adapters for mqtt.js and u8-mqtt.
   - Some environments, like a zigbee2mqtt plugin for example, already has access to an mqtt connection.
 - Local cache (with storage adapter?)
-- Keep track of subscriptions
 - Return native JS async iterables
   - One can easily integrate with RxJS with `from(myIterable)`
 - Query like an ORM
+- Built for Homie v5
 
 Something like this:
 
