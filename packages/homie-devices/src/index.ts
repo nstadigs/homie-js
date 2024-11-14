@@ -1,87 +1,161 @@
-import { mqtt_v5, MQTTClient_v5 } from "u8-mqtt";
-import { DeviceDescription, DeviceState } from "homie-spec";
+import type { DeviceDescription, DeviceState } from "homie-spec";
+import { produceWithPatches, enablePatches, type Producer } from "immer";
 
-class Client {
-  private mqtt: MQTTClient_v5;
+enablePatches();
 
-  constructor() {
-    this.mqtt = mqtt_v5({});
-  }
+export type OnMessageCallback = (topic: string, payload: string) => void;
 
-  connect(url: string) {
-    if (url.startsWith("ws")) {
-      this.mqtt.with_websock(url);
-    } else if (url.startsWith("mqtts")) {
-      this.mqtt.with_tls(url);
-    } else if (url.startsWith("mqtt")) {
-      this.mqtt.with_tcp(url);
-    } else {
-      throw new Error("Not supported");
-    }
+export type MqttAdapter = {
+  connect(url: string): Promise<void>;
+  disconnect(url: string): Promise<void>;
+  subscribe(topic: string): Promise<void>;
+  unsubscribe(topic: string): Promise<void>;
+  publish(topic: string, payload: string): Promise<void>;
+  onMessage(callback: OnMessageCallback): VoidFunction;
 
-    this.mqtt.connect("ws://localhost:8080/mqtt");
-  }
+  // For last will messages
+  onBeforeDisconnect(callback: () => void): void;
+};
 
-  subscribe(topic: string, callback: (topic: string, payload: string) => void) {
-    this.mqtt.subscribe_topic(topic, callback);
-
-    return () => {
-      this.mqtt.unsubscribe_topic(topic, callback);
-  }
-}
+export type DeviceConfig = Omit<DeviceDescription, "version" | "homie">;
 
 class Device {
+  id: string;
   children: Set<Device> = new Set();
-  nodes: Node[] = [];
   state: DeviceState = "init";
   log: string | null = null;
+  rootDevice: Device;
+  parentDevice?: Device;
+  configuration: DeviceConfig;
+  version: string;
+  values: Record<string, any> = {};
+  #isRunning: boolean;
 
-  constructor() {}
+  constructor(id: string, description: DeviceConfig, parentDevice?: Device) {
+    this.id = id;
+    this.version = Date.now().toString();
+    this.configuration = description;
+    this.parentDevice = parentDevice;
+    this.rootDevice = this.parentDevice?.rootDevice ?? this;
+    this.#isRunning = false;
+  }
 
   get description(): DeviceDescription {
     return {
+      ...this.configuration,
+      version: this.version,
       homie: "5.0",
-      version: "1.0.0",
-      nodes: this.nodes.reduce((acc, node) => {
-        acc[node.id] = node.getAttributes();
-        return acc;
-      }, {}),
-      children: Array.from(this.children).map((child) => child.id),
+      root: this.rootDevice === this ? undefined : this.rootDevice.id,
+      parent: this.parentDevice?.id,
     };
   }
 
-  createChildDevice(props) {
-    this.children.add(child);
+  async update(update: Producer<DeviceDescription>) {
+    const [nextConfiguration, patches] = produceWithPatches(
+      this.configuration,
+      update
+    );
+
+    if (patches.length === 0) {
+      return;
+    }
+
+    this.configuration = nextConfiguration;
+    await this.rootDevice.publish("$state", "init");
+
+    const nodeUpdateRequests = patches.flatMap(({ op, path, value }) => {
+      const [, nodeId, , propertyId] = path;
+
+      switch (op) {
+        case "remove": {
+          let propertyIds = propertyId ? [propertyId] : Object.keys(value);
+
+          return propertyIds.flatMap((propertyId) => [
+            this.publish(`$nodes/${nodeId}/${propertyId}`, ""),
+            this.publish(`$nodes/${nodeId}/${propertyId}/$target`, ""),
+          ]);
+        }
+
+        case "replace": {
+        }
+      }
+    });
+
+    const description = this.description;
+    const descriptionAsJson = JSON.stringify(description);
+
+    await Promise.allSettled(nodeUpdateRequests);
+    await this.rootDevice.publish("$description", descriptionAsJson);
+    await this.rootDevice.publish("$state", "ready");
   }
 
-  createNode(props) {
-    const node = new Node(props);
-    this.nodes.push(node);
+  // createDevice(id: string, config: DeviceConfig) {
+  //   const device = new Device(id, config, this.rootDevice, this.parentDevice);
+  //   this.children.add(device);
+
+  //   this.update((config) => {
+  //     config.children.push(id);
+  //   });
+
+  //   return device;
+  // }
+
+  async start() {
+    this.#isRunning = true;
+
+    await this.publish("$state", "init");
+
+    await Promise.allSettled([
+      ...[...this.children].map((child) => child.start()),
+      this.subscribe(`${this.id}/+/+/set`),
+    ]);
+
+    await this.publish("$description", JSON.stringify(this.description));
+    await this.publish("$state", "ready");
   }
 
-  announce() {}
+  publish(property: string, payload: string): Promise<void> {
+    return this.rootDevice.publish(`${this.id}/${property}`, payload);
+  }
+
+  subscribe(topic: string): Promise<void> {
+    return this.rootDevice.subscribe(topic);
+  }
+
+  unsubscribe(topic: string): Promise<void> {
+    return this.rootDevice.unsubscribe(topic);
+  }
 }
 
-class RootDevice extends Device {
-  client: Client;
+type DeviceType = InstanceType<typeof Device>;
+export { type DeviceType as Device };
 
-  constructor() {
-    super();
+export class RootDevice extends Device {
+  readonly mqttAdapter: MqttAdapter;
 
-    this.client = new Client();
+  constructor(id: string, description: DeviceConfig, mqttAdapter: MqttAdapter) {
+    super(id, description);
+
+    this.mqttAdapter = mqttAdapter;
   }
 
-  start() {
-    this.client.connect();
-    this.client.subscribe();
-    this.client.onSub();
+  override publish(subTopic: string, payload: string): Promise<void> {
+    return this.mqttAdapter.publish(`homie/5/${subTopic}`, payload);
   }
 
-  addDevice(device: Device) {
-    this.children.add(device);
+  override subscribe(topic: string): Promise<void> {
+    return this.mqttAdapter.subscribe(topic);
+  }
+
+  override unsubscribe(topic: string): Promise<void> {
+    return this.mqttAdapter.unsubscribe(topic);
   }
 }
 
-export function createRootDevice(url: string) {
-  return new RootDevice();
+export function createRootDevice(
+  id: string,
+  description: DeviceConfig,
+  mqttAdapter: MqttAdapter
+) {
+  return new RootDevice(id, description, mqttAdapter);
 }

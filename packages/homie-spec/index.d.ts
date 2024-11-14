@@ -89,10 +89,10 @@ export type DeviceDescription = {
 
 export type NodeAttributes = {
   /** Friendly name of the Node. Defaults to the ID of the node. */
-  name: string;
+  name?: string;
 
   /** Type of Node. Please ensure proper namespacing to prevent naming collisions. */
-  type: string;
+  type?: string;
 
   /**
    * The Properties the Node exposes. An object containing the Properties,
@@ -130,15 +130,6 @@ export type PropertyBase = {
   unit?: RecommendedUnit | string;
 };
 
-const myProp: Property = {
-  name: "myThing",
-  datatype: "integer",
-  settable: true,
-  retained: true,
-  unit: "°C",
-  format: "10:30:5",
-} satisfies Property;
-
 export type FloatProperty = PropertyBase & {
   datatype: "float";
 
@@ -156,7 +147,7 @@ export type FloatProperty = PropertyBase & {
    * outside the min/max range). The min/max validation must be done
    * after rounding.
    */
-  format: `${number}:${number}${`:${number} ` | ""}`;
+  format?: `${number}:${number}${`:${number} ` | ""}`;
 };
 
 export type IntegerProperty = PropertyBase & {
@@ -176,7 +167,7 @@ export type IntegerProperty = PropertyBase & {
    * outside the min/max range). The min/max validation must be done
    * after rounding.
    */
-  format: `${number}:${number}${`:${number}` | ""}`;
+  format?: `${number}:${number}${`:${number}` | ""}`;
 };
 
 export type EnumProperty = PropertyBase & {
@@ -215,7 +206,7 @@ export type BooleanProperty = PropertyBase & {
    * then both entries must be specified. Important: the format does NOT specify
    * valid payloads, they are descriptions of the valid payloads false and true.
    */
-  format: `${string},${string}`;
+  format?: `${string},${string}`;
 };
 
 export type DateTimeProperty = PropertyBase & {
@@ -256,7 +247,7 @@ export type JSONProperty = PropertyBase & {
    * See JSON considerations, for some ideas wrt compatibility. If a client fails to parse/compile
    * the JSONschema, then it should ignore the given schema and fall back to the default schema.
    */
-  format: string;
+  format?: string;
 };
 
 export type RecommendedUnit =
