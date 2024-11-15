@@ -1,5 +1,5 @@
 {
-  "name": "@nstadigs/homie-client",
+  "name": "@nstadigs/homie-adapter-u8mqtt",
   "version": "0.0.0",
   "description": "",
   "source": "src/index.ts",
@@ -24,7 +24,7 @@
     "typescript": "^5.6.3",
     "@nstadigs/homie-spec": "workspace:*"
   },
-  "dependencies": {
+  "peerDependencies": {
     "u8-mqtt": "^0.6.6"
   }
 }
