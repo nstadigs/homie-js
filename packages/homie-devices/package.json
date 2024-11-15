@@ -1,5 +1,5 @@
 {
-  "name": "homie-devices",
+  "name": "@nstadigs/homie-devices",
   "version": "0.0.0",
   "description": "",
   "type": "module",
@@ -19,15 +19,16 @@
   "author": "Niklas Stadigs",
   "license": "ISC",
   "devDependencies": {
+    "@nstadigs/homie-spec": "workspace:*",
+    "@nstadigs/u8-mqtt-types": "workspace:*",
     "@parcel/packager-ts": "2.12.0",
     "@parcel/transformer-typescript-types": "2.12.0",
-    "homie-spec": "workspace:*",
     "parcel": "^2.12.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.6.3",
-    "u8-mqtt-types": "workspace:*"
+    "typescript": "^5.6.3"
   },
   "dependencies": {
+    "@sindresorhus/fnv1a": "^3.1.0",
     "immer": "^10.1.1",
     "zod": "^3.23.8"
   }

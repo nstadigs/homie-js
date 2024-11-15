@@ -1,5 +1,6 @@
-import type { DeviceDescription, DeviceState } from "homie-spec";
+import type { DeviceDescription, DeviceState } from "@nstadigs/homie-spec";
 import { produceWithPatches, enablePatches, type Producer } from "immer";
+import fnv1a from "@sindresorhus/fnv1a";
 
 enablePatches();
 
@@ -24,12 +25,11 @@ class Device {
   children: Set<Device> = new Set();
   state: DeviceState = "init";
   log: string | null = null;
-  rootDevice: Device;
-  parentDevice?: Device;
+  readonly rootDevice: Device;
+  readonly parentDevice?: Device;
   configuration: DeviceConfig;
   version: string;
   values: Record<string, any> = {};
-  #isRunning: boolean;
 
   constructor(id: string, description: DeviceConfig, parentDevice?: Device) {
     this.id = id;
@@ -37,18 +37,24 @@ class Device {
     this.configuration = description;
     this.parentDevice = parentDevice;
     this.rootDevice = this.parentDevice?.rootDevice ?? this;
-    this.#isRunning = false;
   }
 
-  get description(): DeviceDescription {
-    return {
-      ...this.configuration,
-      version: this.version,
-      homie: "5.0",
-      root: this.rootDevice === this ? undefined : this.rootDevice.id,
-      parent: this.parentDevice?.id,
-    };
+  get description() {
+    return this.createDescription(this.children, this.configuration);
   }
+
+  createDescription = memoize(
+    (children: Set<Device>, configuration: DeviceConfig) => {
+      return {
+        ...configuration,
+        version: this.version,
+        homie: "5.0",
+        root: this.rootDevice === this ? undefined : this.rootDevice.id,
+        parent: this.parentDevice?.id,
+        children: [...children].map(({ id }) => id),
+      };
+    }
+  );
 
   async update(update: Producer<DeviceDescription>) {
     const [nextConfiguration, patches] = produceWithPatches(
@@ -68,7 +74,7 @@ class Device {
 
       switch (op) {
         case "remove": {
-          let propertyIds = propertyId ? [propertyId] : Object.keys(value);
+          const propertyIds = propertyId ? [propertyId] : Object.keys(value);
 
           return propertyIds.flatMap((propertyId) => [
             this.publish(`$nodes/${nodeId}/${propertyId}`, ""),
@@ -89,20 +95,14 @@ class Device {
     await this.rootDevice.publish("$state", "ready");
   }
 
-  // createDevice(id: string, config: DeviceConfig) {
-  //   const device = new Device(id, config, this.rootDevice, this.parentDevice);
-  //   this.children.add(device);
+  createDevice(id: string, config: DeviceConfig) {
+    const device = new Device(id, config, this.parentDevice);
+    this.children.add(device);
 
-  //   this.update((config) => {
-  //     config.children.push(id);
-  //   });
-
-  //   return device;
-  // }
+    return device;
+  }
 
   async start() {
-    this.#isRunning = true;
-
     await this.publish("$state", "init");
 
     await Promise.allSettled([
@@ -115,6 +115,8 @@ class Device {
   }
 
   publish(property: string, payload: string): Promise<void> {
+    const description = this.description;
+
     return this.rootDevice.publish(`${this.id}/${property}`, payload);
   }
 
@@ -158,4 +160,26 @@ export function createRootDevice(
   mqttAdapter: MqttAdapter
 ) {
   return new RootDevice(id, description, mqttAdapter);
+}
+
+function memoize<TArgs extends unknown[], TReturn>(
+  fn: (...args: TArgs) => TReturn
+): (...args: TArgs) => TReturn {
+  let lastArgs: TArgs | [] = [];
+  let lastResult: TReturn;
+
+  return (...args: TArgs) => {
+    if (
+      lastArgs &&
+      lastArgs.length === args.length &&
+      args.every((arg, i) => arg === lastArgs[i])
+    ) {
+      return lastResult;
+    }
+
+    lastResult = fn(...args);
+    lastArgs = args;
+
+    return lastResult;
+  };
 }
