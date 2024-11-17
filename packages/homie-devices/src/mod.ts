@@ -1,7 +1,7 @@
-import type { DeviceDescription, DeviceState } from "@nstadigs/homie-spec";
-import { produceWithPatches, enablePatches, type Producer } from "immer";
-import fnv1a from "@sindresorhus/fnv1a";
-import { MqttAdapter } from "./MqttAdapter";
+import type { DeviceDescription, DeviceState } from "jsr:@nstadigs/homie-spec";
+import { enablePatches, type Producer, produceWithPatches } from "immer";
+import fnv1a from "fnv1a";
+import type { MqttAdapter } from "./MqttAdapter.ts";
 
 enablePatches();
 

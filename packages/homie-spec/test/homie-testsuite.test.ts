@@ -1,11 +1,9 @@
-import { describe, it } from "node:test";
-import fs from "node:fs";
-import yaml from "yaml";
-import assert from "node:assert";
-import path from "node:path";
-import { validateValue } from "../src/validateValue.js";
-import { validateFormat } from "../src/validateFormat.js";
-import { validateId } from "../src/validateId.js";
+import { describe, it } from "jsr:@std/testing/bdd";
+import { parse } from "jsr:@std/yaml";
+import { equal } from "jsr:@std/assert";
+import { validateValue } from "../src/validateValue.ts";
+import { validateFormat } from "../src/validateFormat.ts";
+import { validateId } from "../src/validateId.ts";
 
 type TestCaseBase = {
   description: string;
@@ -56,21 +54,16 @@ const testsToSkip: Record<string, string[]> = {
 
 describe("Homie teststuite", () => {
   testFileNames.forEach((testFileName) => {
-    const fileContents = fs.readFileSync(
-      path.resolve(
-        import.meta.dirname,
-        "vendor/homie-testsuite/homie5/",
-        testFileName
-      ),
-      "utf-8"
+    const fileContents = Deno.readTextFileSync(
+      `${import.meta.dirname}/vendor/homie-testsuite/homie5/${testFileName}`
     );
 
-    const testFile = yaml.parse(fileContents) as TestFile;
+    const testFile = parse(fileContents) as TestFile;
 
     describe(testFile.description, () => {
       testFile.tests.forEach((test) => {
         if (testsToSkip[testFileName]?.includes(test.description)) {
-          it.skip(test.description);
+          it.skip(test.description, () => {});
           return;
         }
 
@@ -81,13 +74,13 @@ describe("Homie teststuite", () => {
               const result = validateValue(test.definition, test.input_data);
 
               if (result.valid === true) {
-                assert.ok(test.valid);
+                equal(true, test.valid);
 
                 if (test.output_data != null) {
-                  assert.equal(result.value, test.output_data);
+                  equal(result.value, test.output_data);
                 }
               } else {
-                assert.ok(!test.valid);
+                equal(false, test.valid);
               }
 
               break;
@@ -97,9 +90,9 @@ describe("Homie teststuite", () => {
               const result = validateFormat(test.definition);
 
               if (test.valid) {
-                assert.ok(result.valid);
+                equal(true, result.valid);
               } else {
-                assert.ok(!result.valid);
+                equal(false, result.valid);
               }
 
               break;
@@ -108,7 +101,7 @@ describe("Homie teststuite", () => {
             case "homieid": {
               const result = validateId(test.input_data);
 
-              assert.ok(result.valid === test.valid);
+              equal(result.valid, test.valid);
             }
           }
         });

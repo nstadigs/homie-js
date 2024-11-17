@@ -1,5 +1,4 @@
-import type { OnMessageCallback } from "../index";
-import type { MqttAdapter } from "../MqttAdapter";
+import type { MqttAdapter, OnMessageCallback } from "../MqttAdapter.ts";
 
 export class TestMqttAdapter implements MqttAdapter {
   messageCallbacks: Set<OnMessageCallback> = new Set();

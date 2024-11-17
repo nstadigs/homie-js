@@ -1,0 +1,8 @@
+{
+  "name": "@nstadigs/homie-client",
+  "version": "0.1.0",
+  "exports": "./mod.ts",
+  "imports": {
+    "homie-spec": "jsr:@nstadigs/homie-spec"
+  }
+}

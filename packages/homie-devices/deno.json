@@ -1,0 +1,11 @@
+{
+  "name": "@nstadigs/homie-devices",
+  "version": "0.1.0",
+  "exports": "./src/mod.ts",
+  "imports": {
+    "@deno/dnt": "jsr:@deno/dnt@^0.41.3",
+    "homie-spec": "jsr:@nstadigs/homie-spec",
+    "fnv1a": "npm:@sindresorhus/fnv1a",
+    "immer": "npm:immer"
+  }
+}
