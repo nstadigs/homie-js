@@ -1,22 +1,16 @@
 import type { DeviceDescription, DeviceState } from "@nstadigs/homie-spec";
 import { produceWithPatches, enablePatches, type Producer } from "immer";
 import fnv1a from "@sindresorhus/fnv1a";
+import { MqttAdapter } from "./MqttAdapter";
 
 enablePatches();
 
-export type OnMessageCallback = (topic: string, payload: string) => void;
-
-export type MqttAdapter = {
-  connect(url: string): Promise<void>;
-  disconnect(url: string): Promise<void>;
-  subscribe(topic: string): Promise<void>;
-  unsubscribe(topic: string): Promise<void>;
-  publish(topic: string, payload: string): Promise<void>;
-  onMessage(callback: OnMessageCallback): VoidFunction;
-
-  // For last will messages
-  onBeforeDisconnect(callback: () => void): void;
-};
+export type SetCommandCallback = (props: {
+  propertyId: string;
+  nodeId: string;
+  value: string;
+  raw: string;
+}) => void;
 
 export type DeviceConfig = Omit<DeviceDescription, "version" | "homie">;
 
@@ -25,18 +19,19 @@ class Device {
   children: Set<Device> = new Set();
   state: DeviceState = "init";
   log: string | null = null;
-  readonly rootDevice: Device;
+  readonly rootDevice: RootDevice;
   readonly parentDevice?: Device;
   configuration: DeviceConfig;
-  version: string;
   values: Record<string, any> = {};
+  publishedDescription: DeviceDescription | null = null;
+  #onMessageCallbacks: Set<SetCommandCallback> = new Set();
 
-  constructor(id: string, description: DeviceConfig, parentDevice?: Device) {
+  constructor(id: string, config: DeviceConfig, parentDevice?: Device) {
     this.id = id;
-    this.version = Date.now().toString();
-    this.configuration = description;
+    this.configuration = config;
     this.parentDevice = parentDevice;
-    this.rootDevice = this.parentDevice?.rootDevice ?? this;
+    this.rootDevice =
+      this.parentDevice?.rootDevice ?? (this as unknown as RootDevice);
   }
 
   get description() {
@@ -44,19 +39,27 @@ class Device {
   }
 
   createDescription = memoize(
-    (children: Set<Device>, configuration: DeviceConfig) => {
-      return {
+    (children: Set<Device>, configuration: DeviceConfig): DeviceDescription => {
+      let description = {
         ...configuration,
-        version: this.version,
+        nodes: configuration.nodes ?? {},
         homie: "5.0",
-        root: this.rootDevice === this ? undefined : this.rootDevice.id,
+        version: "",
+        root:
+          this.rootDevice === (this as unknown as RootDevice)
+            ? undefined
+            : this.rootDevice.id,
         parent: this.parentDevice?.id,
         children: [...children].map(({ id }) => id),
-      };
+      } satisfies DeviceDescription;
+
+      description.version = fnv1a(JSON.stringify(description)).toString(16);
+
+      return description;
     }
   );
 
-  async update(update: Producer<DeviceDescription>) {
+  async reconfigure(update: Producer<DeviceDescription>) {
     const [nextConfiguration, patches] = produceWithPatches(
       this.configuration,
       update
@@ -66,19 +69,24 @@ class Device {
       return;
     }
 
-    this.configuration = nextConfiguration;
     await this.rootDevice.publish("$state", "init");
 
-    const nodeUpdateRequests = patches.flatMap(({ op, path, value }) => {
+    const topicRemovalRequests = patches.flatMap(({ op, path, value }) => {
       const [, nodeId, , propertyId] = path;
+
+      if (op === "add") {
+        return [];
+      }
 
       switch (op) {
         case "remove": {
-          const propertyIds = propertyId ? [propertyId] : Object.keys(value);
+          const propertyIds = propertyId
+            ? [propertyId]
+            : Object.keys(this.configuration?.nodes?.[nodeId].properties ?? {});
 
           return propertyIds.flatMap((propertyId) => [
-            this.publish(`$nodes/${nodeId}/${propertyId}`, ""),
-            this.publish(`$nodes/${nodeId}/${propertyId}/$target`, ""),
+            this.publish(`${nodeId}/${propertyId}`, ""),
+            this.publish(`${nodeId}/${propertyId}/$target`, ""),
           ]);
         }
 
@@ -87,23 +95,31 @@ class Device {
       }
     });
 
+    this.configuration = nextConfiguration;
     const description = this.description;
     const descriptionAsJson = JSON.stringify(description);
 
-    await Promise.allSettled(nodeUpdateRequests);
+    await Promise.allSettled(topicRemovalRequests);
     await this.rootDevice.publish("$description", descriptionAsJson);
     await this.rootDevice.publish("$state", "ready");
   }
 
   createDevice(id: string, config: DeviceConfig) {
     const device = new Device(id, config, this.parentDevice);
-    this.children.add(device);
+
+    // Create new set to avoid referential equality
+    this.children = new Set(this.children).add(device);
+    const description = this.description;
 
     return device;
   }
 
   async start() {
     await this.publish("$state", "init");
+
+    // TODO: Store unsubscribe function returned from onMessage
+    // and call it on destroy
+    this.rootDevice.mqttAdapter.onMessage(this.#handleMessage);
 
     await Promise.allSettled([
       ...[...this.children].map((child) => child.start()),
@@ -114,10 +130,55 @@ class Device {
     await this.publish("$state", "ready");
   }
 
-  publish(property: string, payload: string): Promise<void> {
-    const description = this.description;
+  async publish(subTopic: string, payload: string): Promise<void> {
+    return this.rootDevice.mqttAdapter.publish(
+      `homie/5/${this.id}/${subTopic}`,
+      payload,
+      2,
+      true
+    );
+  }
 
-    return this.rootDevice.publish(`${this.id}/${property}`, payload);
+  #handleMessage = (topic: string, payload: string) => {
+    if (this.#onMessageCallbacks.size === 0) {
+      return;
+    }
+
+    const commandTopicMatcher = new RegExp(
+      `^homie\/5\/${this.id}\/(?<propertyId>[a-z\d-]+)\/(?<nodeId>[a-z\d-]+)\/set$`
+    );
+
+    const match = commandTopicMatcher.exec(topic);
+
+    if (match == null) {
+      return;
+    }
+
+    const { propertyId, nodeId } = match.groups as {
+      propertyId: string;
+      nodeId: string;
+    };
+
+    const value = "";
+    const raw = payload;
+
+    [...this.#onMessageCallbacks].forEach((callback) => {
+      callback({ propertyId, nodeId, value, raw });
+    });
+  };
+
+  onCommand(callback: (topic: string, payload: string) => VoidFunction) {
+    return this.rootDevice.mqttAdapter.onMessage((topic, payload) => {
+      const commandTopicMatcher = new RegExp(
+        `^homie\/5\/${this.id}\/(?<property>[a-z\d-]+)\/(?<node>[a-z\d-]+)\/set$`
+      );
+
+      const match = commandTopicMatcher.exec(topic);
+
+      if (match != null) {
+        callback(this.id, payload);
+      }
+    });
   }
 
   subscribe(topic: string): Promise<void> {
@@ -139,10 +200,6 @@ export class RootDevice extends Device {
     super(id, description);
 
     this.mqttAdapter = mqttAdapter;
-  }
-
-  override publish(subTopic: string, payload: string): Promise<void> {
-    return this.mqttAdapter.publish(`homie/5/${subTopic}`, payload);
   }
 
   override subscribe(topic: string): Promise<void> {

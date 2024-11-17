@@ -1,0 +1,75 @@
+description: validating boolean formats
+
+tests:
+  - description: proper format is accepted
+    testtype: propertydescription
+    definition:
+      datatype: boolean
+      format: "off,on"
+    valid: true
+  - description: reverse format is accepted
+    testtype: propertydescription
+    definition:
+      datatype: boolean
+      format: "on,off"
+    valid: true
+  - description: format is optional
+    testtype: propertydescription
+    definition:
+      datatype: boolean
+    valid: true
+  - description: empty strings are not allowed
+    testtype: propertydescription
+    definition:
+      datatype: boolean
+      format: "off,"
+    valid: false
+  - description: empty strings are not allowed
+    testtype: propertydescription
+    definition:
+      datatype: boolean
+      format: ",on"
+    valid: false
+  - description: space is allowed
+    testtype: propertydescription
+    definition:
+      datatype: boolean
+      format: "off, "
+    valid: true
+  - description: space is allowed
+    testtype: propertydescription
+    definition:
+      datatype: boolean
+      format: " ,on"
+    valid: true
+  - description: single entry is not allowed
+    testtype: propertydescription
+    definition:
+      datatype: boolean
+      format: "on"
+    valid: false
+  - description: more than 2 entries are not allowed
+    testtype: propertydescription
+    definition:
+      datatype: boolean
+      format: "on,off,between"
+    valid: false
+  - description: duplicate entries are not allowed
+    testtype: propertydescription
+    definition:
+      # this is not in the spec but makes sense?
+      datatype: boolean
+      format: "on,on"
+    valid: false
+  - description: anything allowed, as long a comma separated
+    testtype: propertydescription
+    definition:
+      datatype: boolean
+      format: "@**&#%&@&,     5454      "
+    valid: true
+  - description: utf-8 characters are allowed
+    testtype: propertydescription
+    definition:
+      datatype: boolean
+      format: "👍,👎"
+    valid: true

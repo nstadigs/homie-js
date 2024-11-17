@@ -1,0 +1,3 @@
+[submodule "packages/homie-spec/test/vendor/homie-testsuite"]
+	path = packages/homie-spec/test/vendor/homie-testsuite
+	url = git@github.com:homieiot/homie-testsuite.git

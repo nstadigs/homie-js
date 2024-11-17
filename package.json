@@ -5,9 +5,13 @@
   "workspaces": [
     "packages/*"
   ],
+  "scripts": {
+    "test": "jest"
+  },
   "engines": {
     "node": ">=18",
     "pnpm": "9.7.0"
   },
-  "packageManager": "pnpm@9.7.0"
+  "packageManager": "pnpm@9.7.0",
+  "devDependencies": {}
 }

@@ -107,6 +107,7 @@ export type PropertyBase = {
 
   /** The data type. */
   datatype:
+    | "string"
     | "integer"
     | "float"
     | "boolean"
@@ -130,6 +131,10 @@ export type PropertyBase = {
   unit?: RecommendedUnit | string;
 };
 
+export type StringProperty = PropertyBase & {
+  datatype: "string";
+};
+
 export type FloatProperty = PropertyBase & {
   datatype: "float";
 
@@ -147,7 +152,7 @@ export type FloatProperty = PropertyBase & {
    * outside the min/max range). The min/max validation must be done
    * after rounding.
    */
-  format?: `${number}:${number}${`:${number} ` | ""}`;
+  format?: `${number | ""}:${number | ""}${`:${number}` | ""}`;
 };
 
 export type IntegerProperty = PropertyBase & {
@@ -167,7 +172,7 @@ export type IntegerProperty = PropertyBase & {
    * outside the min/max range). The min/max validation must be done
    * after rounding.
    */
-  format?: `${number}:${number}${`:${number}` | ""}`;
+  format?: `${number | ""}:${number | ""}${`:${number}` | ""}`;
 };
 
 export type EnumProperty = PropertyBase & {
@@ -319,6 +324,7 @@ export type RecommendedUnit =
   | "#";
 
 export type Property =
+  | StringProperty
   | FloatProperty
   | IntegerProperty
   | EnumProperty

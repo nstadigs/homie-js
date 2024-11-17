@@ -1,0 +1,34 @@
+description: validating boolean values
+
+tests:
+  - description: Normal integer value without format works
+    testtype: propertyvalueinteger
+    definition:
+      datatype: integer
+    input_data: "12"
+    output_data: 12
+    valid: true
+  - description: Rounded step for min max bounds works
+    testtype: propertyvalueinteger
+    definition:
+      datatype: integer
+      format: "0:10:2"
+    input_data: "9"
+    output_data: 10
+    valid: true
+  - description: Rounded step for max bounds works
+    testtype: propertyvalueinteger
+    definition:
+      datatype: integer
+      format: ":10:2"
+    input_data: "9"
+    output_data: 8
+    valid: true
+  - description: Rounded step for min bounds works
+    testtype: propertyvalueinteger
+    definition:
+      datatype: integer
+      format: "0::2"
+    input_data: "9"
+    output_data: 10
+    valid: true

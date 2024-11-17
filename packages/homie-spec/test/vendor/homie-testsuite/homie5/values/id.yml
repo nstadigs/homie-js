@@ -1,0 +1,115 @@
+description: validating Homie-IDs
+tests:
+  - description: Passes valid Homie-IDs
+    testtype: homieid
+    input_data: xxx
+    valid: true
+  - description: long IDs are allowed
+    testtype: homieid
+    input_data: >-
+      xxxxxxxxxx-xxxxxxxxxx-xxxxxxxxxx-xxxxxxxxxx-xxxxxxxxxx-xxxxxxxxxx-xxxxxxxxxx-xxxxxxxxxx
+    valid: true
+  - description: uppercase is not allowed
+    testtype: homieid
+    input_data: XXX
+    valid: false
+  - description: dash is allowed
+    testtype: homieid
+    input_data: x-x
+    valid: true
+  - description: leading dash is allowed
+    testtype: homieid
+    input_data: "-x"
+    valid: true
+  - description: trailing dash is allowed
+    testtype: homieid
+    input_data: x-
+    valid: true
+  - description: only dashes is allowed
+    testtype: homieid
+    input_data: "-----"
+    valid: true
+  - description: leading digit is allowed
+    testtype: homieid
+    input_data: 1x
+    valid: true
+  - description: trailing digit is allowed
+    testtype: homieid
+    input_data: x1
+    valid: true
+  - description: leading digit is allowed
+    testtype: homieid
+    input_data: "1"
+    valid: true
+  - description: trailing digit is allowed
+    testtype: homieid
+    input_data: "1"
+    valid: true
+  - description: only digits is allowed
+    testtype: homieid
+    input_data: "12345"
+    valid: true
+  - description: empty is not allowed
+    testtype: homieid
+    input_data: ""
+    valid: false
+  - description: underscore is not allowed
+    testtype: homieid
+    input_data: x_x
+    valid: false
+  - description: space is not allowed
+    testtype: homieid
+    input_data: x x
+    valid: false
+  - description: special character ! are not allowed
+    testtype: homieid
+    input_data: x!x
+    valid: false
+  - description: special character @ is not allowed
+    testtype: homieid
+    input_data: x@x
+    valid: false
+  - description: "special character # is not allowed"
+    testtype: homieid
+    input_data: "x#x"
+    valid: false
+  - description: special character $ is not allowed
+    testtype: homieid
+    input_data: x$x
+    valid: false
+  - description: special character % is not allowed
+    testtype: homieid
+    input_data: x%x
+    valid: false
+  - description: special character ^ is not allowed
+    testtype: homieid
+    input_data: x^x
+    valid: false
+  - description: special character & is not allowed
+    testtype: homieid
+    input_data: x&x
+    valid: false
+  - description: special character * is not allowed
+    testtype: homieid
+    input_data: x*x
+    valid: false
+  - description: special character ( is not allowed
+    testtype: homieid
+    input_data: x(x
+    valid: false
+  - description: special character ) is not allowed
+    testtype: homieid
+    input_data: x)x
+    valid: false
+  - description: special character = is not allowed
+    testtype: homieid
+    input_data: x=x
+    valid: false
+  - description: special character + is not allowed
+    testtype: homieid
+    input_data: x+x
+    valid: false
+  - description: utf-8 characters are not allowed
+    testtype: homieid
+    input_data: "👍"
+    valid: false
