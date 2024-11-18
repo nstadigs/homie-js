@@ -190,7 +190,7 @@ class Device {
 }
 
 type DeviceType = InstanceType<typeof Device>;
-export { type DeviceType as Device };
+export type { DeviceType as Device };
 
 export class RootDevice extends Device {
   readonly mqttAdapter: MqttAdapter;
