@@ -7,7 +7,7 @@ need. I hope to reach a state where I feel confident with contributions.
 
 ## TODO:
 
-- [ ] @nstadigs/homie-devices
+- [ ] @nstadigs/homie-devices (create homie v5 devices in js/ts)
   - [x] Basic structure
   - [x] Send initial payloads on init
   - [x] Send expected payloads on update
@@ -16,13 +16,13 @@ need. I hope to reach a state where I feel confident with contributions.
   - [ ] Handle set commands
   - [ ] Validate set command
   - [ ] Validate ids
-  - [ ] Pause/resume mqtt updates mqtt-connections (z2m plugin for example)
-  - [ ] ...finilize
-- [ ] @nstadigs/homie-client
+  - [ ] Pause/resume mqtt updates
+  - [ ] ...finalize
+- [ ] @nstadigs/homie-client (homie v5 client for automations etc)
   - [ ] ?
 - [ ] @nstadigs/homie-spec (js/ts utilities for working with homie v5)
   - [x] Specification as ts-types
-  - [ ] Value valdator
+  - [ ] Value validator
   - [ ] Format validator
   - [ ] ID validator
   - [ ] Contribute to and test with https://github.com/homieiot/homie-testsuite
