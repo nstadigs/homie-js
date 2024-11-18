@@ -22,7 +22,7 @@ class Device {
   readonly rootDevice: RootDevice;
   readonly parentDevice?: Device;
   configuration: DeviceConfig;
-  values: Record<string, any> = {};
+  values: Record<string, unknown> = {};
   publishedDescription: DeviceDescription | null = null;
   #onMessageCallbacks: Set<SetCommandCallback> = new Set();
 
