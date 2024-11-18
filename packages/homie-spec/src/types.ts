@@ -50,7 +50,7 @@ export type DeviceDescription = {
    * a new version must be assigned. This does not need to be sequential,
    * eg. a timestamp or a random number could be used.
    */
-  version: string;
+  version: number;
 
   /**
    * The Nodes the device exposes. An object containing the Nodes,

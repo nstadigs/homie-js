@@ -44,7 +44,7 @@ class Device {
         ...configuration,
         nodes: configuration.nodes ?? {},
         homie: "5.0",
-        version: "",
+        version: 0,
         root: this.rootDevice === (this as unknown as RootDevice)
           ? undefined
           : this.rootDevice.id,
@@ -52,7 +52,9 @@ class Device {
         children: [...children].map(({ id }) => id),
       } satisfies DeviceDescription;
 
-      description.version = fnv1a(JSON.stringify(description)).toString(16);
+      description.version = Number(fnv1a(JSON.stringify(description), {
+        size: 32,
+      }));
 
       return description;
     },
