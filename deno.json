@@ -8,7 +8,7 @@
     "exclude": ["**/vendor/"]
   },
   "lint": {
-    "ignore": ["**/vendor/"]
+    "exclude": ["**/vendor/"]
   },
   "test": {
     "exclude": ["**/vendor/"]
