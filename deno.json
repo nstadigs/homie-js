@@ -3,5 +3,14 @@
     "./packages/homie-spec",
     "./packages/homie-devices",
     "./packages/homie-client"
-  ]
+  ],
+  "fmt": {
+    "exclude": ["**/vendor/"]
+  },
+  "lint": {
+    "ignore": ["**/vendor/"]
+  },
+  "test": {
+    "exclude": ["**/vendor/"]
+  }
 }
