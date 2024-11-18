@@ -55,7 +55,7 @@ const testsToSkip: Record<string, string[]> = {
 describe("Homie teststuite", () => {
   testFileNames.forEach((testFileName) => {
     const fileContents = Deno.readTextFileSync(
-      `${import.meta.dirname}/vendor/homie-testsuite/homie5/${testFileName}`
+      `${import.meta.dirname}/vendor/homie-testsuite/homie5/${testFileName}`,
     );
 
     const testFile = parse(fileContents) as TestFile;

@@ -7,7 +7,6 @@ export type DeviceState =
    * A device may fall back into this state to do some reconfiguration.
    */
   | "init"
-
   /**
    * This is the state the device is in when it is connected to the MQTT broker
    * and has sent all Homie messages describing the device attributes, nodes, properties,
@@ -15,19 +14,16 @@ export type DeviceState =
    * ready to receive messages.
    */
   | "ready"
-
   /**
    * This is the state the device is in when it is cleanly disconnected from the MQTT broker.
    * You must send this message before cleanly disconnecting.
    */
   | "disconnected"
-
   /**
    * This is the state the device is in when the device is sleeping. You have to send this
    * message before sleeping.
    */
   | "sleeping"
-
   /**
    * This is the state the device is in when the device has been “badly” disconnected.
    * Important: If a root-device $state is "lost" then the state of every child device in its tree is also "lost".

@@ -9,7 +9,7 @@ export type MqttAdapter = {
     topic: string,
     payload: string,
     qos: 0 | 1 | 2,
-    retained: boolean
+    retained: boolean,
   ): Promise<void>;
   onMessage(callback: OnMessageCallback): VoidFunction;
 

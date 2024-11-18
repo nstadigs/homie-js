@@ -14,7 +14,7 @@ type Result = SuccessResult | FailResult;
 
 export function validateValue(
   { format, datatype }: { format?: string; datatype: string },
-  raw: string
+  raw: string,
 ): Result {
   switch (datatype) {
     case "integer":

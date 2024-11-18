@@ -218,6 +218,6 @@ function createTestRootDevice(mqttAdapter: TestMqttAdapter) {
         },
       },
     },
-    mqttAdapter
+    mqttAdapter,
   );
 }

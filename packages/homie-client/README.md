@@ -4,7 +4,8 @@ Idea is this:
 
 - Integrate with any mqtt-client
   - Provide adapters for mqtt.js and u8-mqtt.
-  - Some environments, like a zigbee2mqtt plugin for example, already has access to an mqtt connection.
+  - Some environments, like a zigbee2mqtt plugin for example, already has access
+    to an mqtt connection.
 - Local cache (with storage adapter?)
 - Return native JS async iterables
   - One can easily integrate with RxJS with `from(myIterable)`

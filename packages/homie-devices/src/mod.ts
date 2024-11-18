@@ -30,8 +30,8 @@ class Device {
     this.id = id;
     this.configuration = config;
     this.parentDevice = parentDevice;
-    this.rootDevice =
-      this.parentDevice?.rootDevice ?? (this as unknown as RootDevice);
+    this.rootDevice = this.parentDevice?.rootDevice ??
+      (this as unknown as RootDevice);
   }
 
   get description() {
@@ -45,10 +45,9 @@ class Device {
         nodes: configuration.nodes ?? {},
         homie: "5.0",
         version: "",
-        root:
-          this.rootDevice === (this as unknown as RootDevice)
-            ? undefined
-            : this.rootDevice.id,
+        root: this.rootDevice === (this as unknown as RootDevice)
+          ? undefined
+          : this.rootDevice.id,
         parent: this.parentDevice?.id,
         children: [...children].map(({ id }) => id),
       } satisfies DeviceDescription;
@@ -56,13 +55,13 @@ class Device {
       description.version = fnv1a(JSON.stringify(description)).toString(16);
 
       return description;
-    }
+    },
   );
 
   async reconfigure(update: Producer<DeviceDescription>) {
     const [nextConfiguration, patches] = produceWithPatches(
       this.configuration,
-      update
+      update,
     );
 
     if (patches.length === 0) {
@@ -135,7 +134,7 @@ class Device {
       `homie/5/${this.id}/${subTopic}`,
       payload,
       2,
-      true
+      true,
     );
   }
 
@@ -145,7 +144,7 @@ class Device {
     }
 
     const commandTopicMatcher = new RegExp(
-      `^homie\/5\/${this.id}\/(?<propertyId>[a-z\d-]+)\/(?<nodeId>[a-z\d-]+)\/set$`
+      `^homie\/5\/${this.id}\/(?<propertyId>[a-z\d-]+)\/(?<nodeId>[a-z\d-]+)\/set$`,
     );
 
     const match = commandTopicMatcher.exec(topic);
@@ -170,7 +169,7 @@ class Device {
   onCommand(callback: (topic: string, payload: string) => VoidFunction) {
     return this.rootDevice.mqttAdapter.onMessage((topic, payload) => {
       const commandTopicMatcher = new RegExp(
-        `^homie\/5\/${this.id}\/(?<property>[a-z\d-]+)\/(?<node>[a-z\d-]+)\/set$`
+        `^homie\/5\/${this.id}\/(?<property>[a-z\d-]+)\/(?<node>[a-z\d-]+)\/set$`,
       );
 
       const match = commandTopicMatcher.exec(topic);
@@ -214,13 +213,13 @@ export class RootDevice extends Device {
 export function createRootDevice(
   id: string,
   description: DeviceConfig,
-  mqttAdapter: MqttAdapter
+  mqttAdapter: MqttAdapter,
 ) {
   return new RootDevice(id, description, mqttAdapter);
 }
 
 function memoize<TArgs extends unknown[], TReturn>(
-  fn: (...args: TArgs) => TReturn
+  fn: (...args: TArgs) => TReturn,
 ): (...args: TArgs) => TReturn {
   let lastArgs: TArgs | [] = [];
   let lastResult: TReturn;

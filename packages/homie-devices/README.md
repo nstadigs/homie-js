@@ -4,16 +4,16 @@ Idea is this:
 
 - Integrate with any mqtt-client
   - Provide adapters for mqtt.js and u8-mqtt.
-  - Some environments, like a zigbee2mqtt plugin for example, already has access to an mqtt connection.
+  - Some environments, like a zigbee2mqtt plugin for example, already has access
+    to an mqtt connection.
 - Built for Homie v5
 - Root device handles connection. Child devices uses connection of root device
-- You just write the device description and this library will take care of the mqtt stuff
+- You just write the device description and this library will take care of the
+  mqtt stuff
 
 Example
 
 ```typescript
-
-
 const myRootDevice = createDevice('root-device', {
 
 }, mqttAdapter);
@@ -44,5 +44,4 @@ myRootDevice.onSetCommand((node, property, value) => {
 myRootDevice.setValue(node, propery, value) => {
 
 });
-
 ```
