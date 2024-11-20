@@ -16,6 +16,8 @@ need. I hope to reach a state where I feel confident with contributions.
   - [ ] Validate format
   - [x] Handle set commands
   - [ ] Validate set command
+    - [x] Ignore invalid payloads
+    - [ ] Log errors
   - [ ] Validate ids
   - [ ] Pause/resume mqtt updates
   - [ ] ...finalize

@@ -223,7 +223,7 @@ describe("Reconfiguring device", () => {
 });
 
 describe("Set command handling", () => {
-  it("gets called when a set command is received", async () => {
+  it("gets called with converted value when a valid set command is received", async () => {
     const mqttAdapter = new TestMqttAdapter();
     const rootDevice = createTestRootDevice(mqttAdapter);
 
@@ -248,6 +248,28 @@ describe("Set command handling", () => {
       value: 50,
       raw: "50",
     }]);
+  });
+
+  it("ignores invalid payloads", async () => {
+    const mqttAdapter = new TestMqttAdapter();
+    const rootDevice = createTestRootDevice(mqttAdapter);
+
+    await rootDevice.start();
+
+    let called = false;
+
+    rootDevice.onCommand(() => {
+      called = true;
+    });
+
+    await mqttAdapter.publish(
+      "homie/5/root-device/node-1/property-1/set",
+      "invalid",
+      0,
+      false,
+    );
+
+    assertEquals(called, false);
   });
 });
 
