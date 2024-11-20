@@ -1,9 +1,9 @@
 import { describe, it } from "jsr:@std/testing/bdd";
-import * as assert from "jsr:@std/assert";
+import { assertEquals } from "jsr:@std/assert";
 import { createRootDevice } from "../mod.ts";
 import { TestMqttAdapter } from "./utils.ts";
 
-describe("Initializing device", () => {
+describe("Initializing root device", () => {
   it("Publishes correct topics and payloads", async () => {
     const mqttAdapter = new TestMqttAdapter();
 
@@ -11,20 +11,20 @@ describe("Initializing device", () => {
 
     await rootDevice.start();
 
-    assert.equal(mqttAdapter.events.length, 3);
-    assert.equal(mqttAdapter.events[0], {
+    assertEquals(mqttAdapter.events.length, 3);
+    assertEquals(mqttAdapter.events[0], {
       payload: "init",
       qos: 2,
       retained: true,
-      topic: "homie/5/test-device/$state",
+      topic: "homie/5/root-device/$state",
     });
 
-    assert.equal(mqttAdapter.events[1], {
-      topic: "homie/5/test-device/$description",
+    assertEquals(mqttAdapter.events[1], {
+      topic: "homie/5/root-device/$description",
       payload: JSON.stringify({
         name: "Test Device",
         nodes: {
-          "test-node": {
+          "node-1": {
             name: "Test Node",
             properties: {
               "property-1": {
@@ -45,27 +45,26 @@ describe("Initializing device", () => {
           },
         },
         homie: "5.0",
-        version: "f785781f",
+        version: 3337458480,
         children: [],
       }),
       qos: 2,
       retained: true,
     });
 
-    assert.equal(mqttAdapter.events[2], {
+    assertEquals(mqttAdapter.events[2], {
       payload: "ready",
       qos: 2,
       retained: true,
-      topic: "homie/5/test-device/$state",
+      topic: "homie/5/root-device/$state",
     });
   });
 });
 
 describe("Reconfiguring device", () => {
-  it("publishes $state before and after reconfiguration", async () => {
+  it("publishes correct $state before and after reconfiguration", async () => {
     const mqttAdapter = new TestMqttAdapter();
     const rootDevice = createTestRootDevice(mqttAdapter);
-
     await rootDevice.start();
 
     mqttAdapter.reset();
@@ -74,20 +73,46 @@ describe("Reconfiguring device", () => {
       config.name = "New Name";
     });
 
-    assert.equal(mqttAdapter.events.length, 3);
+    assertEquals(mqttAdapter.events.length, 3);
 
-    assert.equal(mqttAdapter.events[0], {
+    assertEquals(mqttAdapter.events[0], {
       payload: "init",
       qos: 2,
       retained: true,
-      topic: "homie/5/test-device/$state",
+      topic: "homie/5/root-device/$state",
     });
 
-    assert.equal(mqttAdapter.events[1], {
+    assertEquals(
+      mqttAdapter.events[1].topic,
+      "homie/5/root-device/$description",
+    );
+
+    assertEquals(mqttAdapter.events[2], {
+      payload: "ready",
+      qos: 2,
+      retained: true,
+      topic: "homie/5/root-device/$state",
+    });
+  });
+
+  it("publishes correct $configuration", async () => {
+    const mqttAdapter = new TestMqttAdapter();
+    const rootDevice = createTestRootDevice(mqttAdapter);
+    await rootDevice.start();
+
+    mqttAdapter.reset();
+
+    await rootDevice.reconfigure((config) => {
+      config.name = "New Name";
+    });
+
+    assertEquals(mqttAdapter.events.length, 3);
+
+    assertEquals(mqttAdapter.events[1], {
       payload: JSON.stringify({
         name: "New Name",
         nodes: {
-          "test-node": {
+          "node-1": {
             name: "Test Node",
             properties: {
               "property-1": {
@@ -108,19 +133,12 @@ describe("Reconfiguring device", () => {
           },
         },
         homie: "5.0",
-        version: "a67a72fc",
+        version: 3448011083,
         children: [],
       }),
       qos: 2,
       retained: true,
-      topic: "homie/5/test-device/$description",
-    });
-
-    assert.equal(mqttAdapter.events[2], {
-      payload: "ready",
-      qos: 2,
-      retained: true,
-      topic: "homie/5/test-device/$state",
+      topic: "homie/5/root-device/$description",
     });
   });
 
@@ -133,30 +151,30 @@ describe("Reconfiguring device", () => {
     mqttAdapter.reset();
 
     await rootDevice.reconfigure((config) => {
-      delete config.nodes?.["test-node"];
+      delete config.nodes?.["node-1"];
     });
 
-    assert.equal(mqttAdapter.events.length, 7);
-    assert.equal(mqttAdapter.events[1], {
-      topic: "homie/5/test-device/test-node/property-1",
+    assertEquals(mqttAdapter.events.length, 7);
+    assertEquals(mqttAdapter.events[1], {
+      topic: "homie/5/root-device/node-1/property-1",
       payload: "",
       qos: 2,
       retained: true,
     });
-    assert.equal(mqttAdapter.events[2], {
-      topic: "homie/5/test-device/test-node/property-1/$target",
+    assertEquals(mqttAdapter.events[2], {
+      topic: "homie/5/root-device/node-1/property-1/$target",
       payload: "",
       qos: 2,
       retained: true,
     });
-    assert.equal(mqttAdapter.events[3], {
-      topic: "homie/5/test-device/test-node/property-2",
+    assertEquals(mqttAdapter.events[3], {
+      topic: "homie/5/root-device/node-1/property-2",
       payload: "",
       qos: 2,
       retained: true,
     });
-    assert.equal(mqttAdapter.events[4], {
-      topic: "homie/5/test-device/test-node/property-2/$target",
+    assertEquals(mqttAdapter.events[4], {
+      topic: "homie/5/root-device/node-1/property-2/$target",
       payload: "",
       qos: 2,
       retained: true,
@@ -172,19 +190,124 @@ describe("Reconfiguring device", () => {
     mqttAdapter.reset();
 
     await rootDevice.reconfigure((config) => {
-      delete config.nodes?.["test-node"]?.properties?.["property-1"];
+      delete config.nodes?.["node-1"]?.properties?.["property-1"];
     });
 
-    assert.equal(mqttAdapter.events.length, 5);
-    assert.equal(mqttAdapter.events[1], {
-      topic: "homie/5/test-device/test-node/property-1",
+    assertEquals(mqttAdapter.events.length, 5);
+    assertEquals(mqttAdapter.events[1], {
+      topic: "homie/5/root-device/node-1/property-1",
       payload: "",
       qos: 2,
       retained: true,
     });
-    assert.equal(mqttAdapter.events[2], {
-      topic: "homie/5/test-device/test-node/property-1/$target",
+    assertEquals(mqttAdapter.events[2], {
+      topic: "homie/5/root-device/node-1/property-1/$target",
       payload: "",
+      qos: 2,
+      retained: true,
+    });
+  });
+});
+
+describe("Creating child device", () => {
+  it("Publishes correct topics and payloads", async () => {
+    const mqttAdapter = new TestMqttAdapter();
+
+    const rootDevice = createTestRootDevice(mqttAdapter);
+
+    await rootDevice.start();
+
+    mqttAdapter.reset();
+
+    await rootDevice.createDevice("child-device", {
+      name: "Child Device",
+      nodes: {
+        "node-1": {
+          name: "Node 1",
+          properties: {
+            "property-1": {
+              name: "Property 1",
+              datatype: "integer",
+              format: "0:100",
+              retained: true,
+              settable: true,
+            },
+          },
+        },
+      },
+    });
+
+    //
+
+    assertEquals(mqttAdapter.events.length, 6);
+
+    // root init
+    assertEquals(mqttAdapter.events[0], {
+      topic: "homie/5/root-device/$state",
+      payload: "init",
+      qos: 2,
+      retained: true,
+    });
+
+    // child init
+    assertEquals(mqttAdapter.events[1], {
+      topic: "homie/5/child-device/$state",
+      payload: "init",
+      qos: 2,
+      retained: true,
+    });
+
+    // child description
+    assertEquals(mqttAdapter.events[2], {
+      topic: "homie/5/child-device/$description",
+      payload: JSON.stringify({
+        "name": "Child Device",
+        "nodes": {
+          "node-1": {
+            "name": "Node 1",
+            "properties": {
+              "property-1": {
+                "name": "Property 1",
+                "datatype": "integer",
+                "format": "0:100",
+                "retained": true,
+                "settable": true,
+              },
+            },
+          },
+        },
+        "homie": "5.0",
+        "version": 31206040,
+        "root": "root-device",
+        "parent": "root-device",
+        "children": [],
+      }),
+      qos: 2,
+      retained: true,
+    });
+
+    // child ready
+    assertEquals(mqttAdapter.events[3], {
+      topic: "homie/5/child-device/$state",
+      payload: "ready",
+      qos: 2,
+      retained: true,
+    });
+
+    // // root description
+    assertEquals(
+      mqttAdapter.events[4].topic,
+      "homie/5/root-device/$description",
+    );
+    assertEquals(mqttAdapter.events[4].qos, 2);
+    assertEquals(mqttAdapter.events[4].retained, true);
+    const description = JSON.parse(mqttAdapter.events[4].payload);
+    assertEquals(description.children, ["child-device"]);
+
+    // // root ready
+    assertEquals(mqttAdapter.events[5], {
+      topic: "homie/5/root-device/$state",
+      payload: "ready",
       qos: 2,
       retained: true,
     });
@@ -193,11 +316,11 @@ describe("Reconfiguring device", () => {
 
 function createTestRootDevice(mqttAdapter: TestMqttAdapter) {
   return createRootDevice(
-    "test-device",
+    "root-device",
     {
       name: "Test Device",
       nodes: {
-        "test-node": {
+        "node-1": {
           name: "Test Node",
           properties: {
             "property-1": {

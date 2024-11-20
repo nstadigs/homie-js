@@ -17,7 +17,7 @@ export type DeviceConfig = Omit<DeviceDescription, "version" | "homie">;
 class Device {
   id: string;
   children: Set<Device> = new Set();
-  state: DeviceState = "init";
+  state: DeviceState = "disconnected";
   log: string | null = null;
   readonly rootDevice: RootDevice;
   readonly parentDevice?: Device;
@@ -35,12 +35,22 @@ class Device {
   }
 
   get description() {
-    return this.createDescription(this.children, this.configuration);
+    return this.#createDescription(this.children, this.configuration);
   }
 
-  createDescription = memoize(
+  async setState(state: DeviceState) {
+    if (this.state === state) {
+      return;
+    }
+
+    this.state = state;
+
+    await this.publish("$state", state);
+  }
+
+  #createDescription = memoize(
     (children: Set<Device>, configuration: DeviceConfig): DeviceDescription => {
-      let description = {
+      const description = {
         ...configuration,
         nodes: configuration.nodes ?? {},
         homie: "5.0",
@@ -70,30 +80,23 @@ class Device {
       return;
     }
 
-    await this.rootDevice.publish("$state", "init");
+    await this.setState("init");
 
-    const topicRemovalRequests = patches.flatMap(({ op, path, value }) => {
-      const [, nodeId, , propertyId] = path;
+    const topicRemovalRequests = patches.flatMap(({ op, path }) => {
+      const [propertyName, nodeId, , propertyId] = path;
 
-      if (op === "add") {
-        return [];
+      if ((op === "add") || (propertyName !== "nodes")) {
+        return;
       }
 
-      switch (op) {
-        case "remove": {
-          const propertyIds = propertyId
-            ? [propertyId]
-            : Object.keys(this.configuration?.nodes?.[nodeId].properties ?? {});
+      const propertyIds = propertyId
+        ? [propertyId]
+        : Object.keys(this.configuration?.nodes?.[nodeId].properties ?? {});
 
-          return propertyIds.flatMap((propertyId) => [
-            this.publish(`${nodeId}/${propertyId}`, ""),
-            this.publish(`${nodeId}/${propertyId}/$target`, ""),
-          ]);
-        }
-
-        case "replace": {
-        }
-      }
+      return propertyIds.flatMap((propertyId) => [
+        this.publish(`${nodeId}/${propertyId}`, ""),
+        this.publish(`${nodeId}/${propertyId}/$target`, ""),
+      ]);
     });
 
     this.configuration = nextConfiguration;
@@ -102,21 +105,27 @@ class Device {
 
     await Promise.allSettled(topicRemovalRequests);
     await this.rootDevice.publish("$description", descriptionAsJson);
-    await this.rootDevice.publish("$state", "ready");
+    await this.setState("ready");
   }
 
-  createDevice(id: string, config: DeviceConfig) {
-    const device = new Device(id, config, this.parentDevice);
+  async createDevice(id: string, config: DeviceConfig) {
+    this.setState("init");
 
+    const device = new Device(id, config, this);
+
+    // await this.
+
+    await device.start();
     // Create new set to avoid referential equality
     this.children = new Set(this.children).add(device);
-    const description = this.description;
+    this.publish("$description", JSON.stringify(this.description));
+    this.setState("ready");
 
     return device;
   }
 
   async start() {
-    await this.publish("$state", "init");
+    await this.setState("init");
 
     // TODO: Store unsubscribe function returned from onMessage
     // and call it on destroy
@@ -128,10 +137,10 @@ class Device {
     ]);
 
     await this.publish("$description", JSON.stringify(this.description));
-    await this.publish("$state", "ready");
+    await this.setState("ready");
   }
 
-  async publish(subTopic: string, payload: string): Promise<void> {
+  publish(subTopic: string, payload: string): Promise<void> {
     return this.rootDevice.mqttAdapter.publish(
       `homie/5/${this.id}/${subTopic}`,
       payload,
@@ -194,9 +203,20 @@ class Device {
 type DeviceType = InstanceType<typeof Device>;
 export type { DeviceType as Device };
 
+/**
+ * Represents a root device.
+ * The root device handles all mqtt communication of itself and child devices.
+ */
 export class RootDevice extends Device {
   readonly mqttAdapter: MqttAdapter;
 
+  /**
+   * Constructs a new instance of the Device class.
+   *
+   * @param id - The ID of the device.
+   * @param description - The description of the device.
+   * @param mqttAdapter - The MQTT adapter to use for this device and all child devices.
+   */
   constructor(id: string, description: DeviceConfig, mqttAdapter: MqttAdapter) {
     super(id, description);
 
@@ -212,6 +232,14 @@ export class RootDevice extends Device {
   }
 }
 
+/**
+ * Creates a root device.
+ *
+ * @param id - The ID of the device.
+ * @param description - The configuration of the device.
+ * @param mqttAdapter - The MQTT adapter to use for this device and all child devices.
+ * @returns The created root device.
+ */
 export function createRootDevice(
   id: string,
   description: DeviceConfig,
