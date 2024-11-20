@@ -1,6 +1,6 @@
 import { describe, it } from "jsr:@std/testing/bdd";
 import { assertEquals } from "jsr:@std/assert";
-import { createRootDevice } from "../mod.ts";
+import { createRootDevice, SetCommandCallback } from "../mod.ts";
 import { TestMqttAdapter } from "./utils.ts";
 
 describe("Initializing root device", () => {
@@ -58,6 +58,19 @@ describe("Initializing root device", () => {
       retained: true,
       topic: "homie/5/root-device/$state",
     });
+  });
+
+  it("Subscribes to set topic", async () => {
+    const mqttAdapter = new TestMqttAdapter();
+
+    const rootDevice = createTestRootDevice(mqttAdapter);
+
+    await rootDevice.start();
+
+    assertEquals(
+      true,
+      mqttAdapter.subscribedTopics.has("homie/5/root-device/+/+/set"),
+    );
   });
 });
 
@@ -209,6 +222,35 @@ describe("Reconfiguring device", () => {
   });
 });
 
+describe("Set command handling", () => {
+  it("gets called when a set command is received", async () => {
+    const mqttAdapter = new TestMqttAdapter();
+    const rootDevice = createTestRootDevice(mqttAdapter);
+
+    await rootDevice.start();
+
+    let calledWith: Parameters<SetCommandCallback> | null = null;
+
+    rootDevice.onCommand((...args) => {
+      calledWith = args;
+    });
+
+    await mqttAdapter.publish(
+      "homie/5/root-device/node-1/property-1/set",
+      "50",
+      0,
+      false,
+    );
+
+    assertEquals(calledWith, [{
+      propertyId: "property-1",
+      nodeId: "node-1",
+      value: 50,
+      raw: "50",
+    }]);
+  });
+});
+
 describe("Creating child device", () => {
   it("Publishes correct topics and payloads", async () => {
     const mqttAdapter = new TestMqttAdapter();
@@ -236,8 +278,6 @@ describe("Creating child device", () => {
         },
       },
     });
-
-    //
 
     assertEquals(mqttAdapter.events.length, 6);
 
@@ -311,6 +351,37 @@ describe("Creating child device", () => {
       qos: 2,
       retained: true,
     });
+  });
+
+  it("Subscribes to set topic", async () => {
+    const mqttAdapter = new TestMqttAdapter();
+
+    const rootDevice = createTestRootDevice(mqttAdapter);
+
+    await rootDevice.start();
+
+    await rootDevice.createDevice("child-device", {
+      name: "Child Device",
+      nodes: {
+        "node-1": {
+          name: "Node 1",
+          properties: {
+            "property-1": {
+              name: "Property 1",
+              datatype: "integer",
+              format: "0:100",
+              retained: true,
+              settable: true,
+            },
+          },
+        },
+      },
+    });
+
+    assertEquals(
+      true,
+      mqttAdapter.subscribedTopics.has("homie/5/child-device/+/+/set"),
+    );
   });
 });
 

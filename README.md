@@ -14,7 +14,7 @@ need. I hope to reach a state where I feel confident with contributions.
   - [x] Create child device
   - [ ] Property values
   - [ ] Validate format
-  - [ ] Handle set commands
+  - [x] Handle set commands
   - [ ] Validate set command
   - [ ] Validate ids
   - [ ] Pause/resume mqtt updates

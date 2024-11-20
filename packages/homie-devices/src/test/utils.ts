@@ -40,6 +40,15 @@ export class TestMqttAdapter implements MqttAdapter {
 
   publish(topic: string, payload: string, qos: 0 | 1 | 2, retained: boolean) {
     this.events.push({ topic, payload, qos, retained });
+    this.messageCallbacks.forEach((callback) => {
+      // if (
+      //   [...this.subscribedTopics].some((subscribedTopic) =>
+      //     matchesMqttTopicPattern(subscribedTopic, topic)
+      //   )
+      // ) {
+      callback(topic, payload);
+      // }
+    });
     return Promise.resolve();
   }
 
@@ -54,4 +63,25 @@ export class TestMqttAdapter implements MqttAdapter {
   onBeforeDisconnect(callback: VoidFunction) {
     console.log("Setting up before disconnect handler");
   }
+}
+
+function matchesMqttTopicPattern(topic: string, pattern: string) {
+  const patternParts = pattern.split("/");
+  const topicParts = topic.split("/");
+
+  for (let i = 0; i < patternParts.length; i++) {
+    if (patternParts[i] === "#") {
+      return true;
+    }
+
+    if (patternParts[i] === "+") {
+      continue;
+    }
+
+    if (patternParts[i] !== topicParts[i]) {
+      return false;
+    }
+  }
+
+  return patternParts.length === topicParts.length;
 }

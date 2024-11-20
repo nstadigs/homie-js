@@ -1,4 +1,8 @@
-import type { DeviceDescription, DeviceState } from "jsr:@nstadigs/homie-spec";
+import {
+  type DeviceDescription,
+  type DeviceState,
+  validateValue,
+} from "jsr:@nstadigs/homie-spec";
 import { enablePatches, type Producer, produceWithPatches } from "immer";
 import fnv1a from "fnv1a";
 import type { MqttAdapter } from "./MqttAdapter.ts";
@@ -8,7 +12,7 @@ enablePatches();
 export type SetCommandCallback = (props: {
   propertyId: string;
   nodeId: string;
-  value: string;
+  value: unknown;
   raw: string;
 }) => void;
 
@@ -133,7 +137,7 @@ class Device {
 
     await Promise.allSettled([
       ...[...this.children].map((child) => child.start()),
-      this.subscribe(`${this.id}/+/+/set`),
+      this.subscribe(`homie/5/${this.id}/+/+/set`),
     ]);
 
     await this.publish("$description", JSON.stringify(this.description));
@@ -155,7 +159,7 @@ class Device {
     }
 
     const commandTopicMatcher = new RegExp(
-      `^homie\/5\/${this.id}\/(?<propertyId>[a-z\d-]+)\/(?<nodeId>[a-z\d-]+)\/set$`,
+      `^homie\/5\/${this.id}\/(?<nodeId>[a-z\\d-]+)\/(?<propertyId>[a-z\\d-]+)\/set$`,
     );
 
     const match = commandTopicMatcher.exec(topic);
@@ -169,26 +173,33 @@ class Device {
       nodeId: string;
     };
 
-    const value = "";
+    const property = this.configuration.nodes?.[nodeId]?.properties[propertyId];
+
+    if (!property) {
+      return;
+    }
+
+    const { datatype, format } = property;
+
     const raw = payload;
+    const result = validateValue({ format, datatype }, payload);
+
+    if (!result.valid) {
+      // TODO: Log error
+      return;
+    }
 
     [...this.#onMessageCallbacks].forEach((callback) => {
-      callback({ propertyId, nodeId, value, raw });
+      callback({ propertyId, nodeId, value: result.value as string, raw });
     });
   };
 
-  onCommand(callback: (topic: string, payload: string) => VoidFunction) {
-    return this.rootDevice.mqttAdapter.onMessage((topic, payload) => {
-      const commandTopicMatcher = new RegExp(
-        `^homie\/5\/${this.id}\/(?<property>[a-z\d-]+)\/(?<node>[a-z\d-]+)\/set$`,
-      );
+  onCommand(callback: SetCommandCallback): VoidFunction {
+    this.#onMessageCallbacks.add(callback);
 
-      const match = commandTopicMatcher.exec(topic);
-
-      if (match != null) {
-        callback(this.id, payload);
-      }
-    });
+    return () => {
+      this.#onMessageCallbacks.delete(callback);
+    };
   }
 
   subscribe(topic: string): Promise<void> {
