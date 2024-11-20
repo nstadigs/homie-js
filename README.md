@@ -20,7 +20,10 @@ need. I hope to reach a state where I feel confident with contributions.
     - [ ] Log errors
   - [ ] Validate ids
   - [ ] Pause/resume mqtt updates
-  - [ ] ...finalize
+  - [ ] Handle disconnect/reconnect
+  - [ ] Handle QOS1 deduplication?
+  - [ ] Persistent storage?
+  - [ ] ...finalize?
 - [ ] @nstadigs/homie-client (homie v5 client for automations etc)
   - [ ] ?
 - [ ] @nstadigs/homie-spec (js/ts utilities for working with homie v5)

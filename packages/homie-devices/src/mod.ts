@@ -26,7 +26,7 @@ class Device {
   readonly rootDevice: RootDevice;
   readonly parentDevice?: Device;
   configuration: DeviceConfig;
-  values: Record<string, unknown> = {};
+  values: Record<string, Record<string, unknown>> = {};
   publishedDescription: DeviceDescription | null = null;
   #onMessageCallbacks: Set<SetCommandCallback> = new Set();
 
@@ -200,6 +200,25 @@ class Device {
     return () => {
       this.#onMessageCallbacks.delete(callback);
     };
+  }
+
+  setValue(nodeId: string, propertyId: string, value: string) {
+    const property = this.configuration.nodes?.[nodeId].properties[propertyId];
+
+    if (property == null) {
+      // TODO: Log error
+      return;
+    }
+
+    if (!validateValue(property, value).valid) {
+      // TODO: Log error
+      return;
+    }
+
+    this.values[nodeId] = this.values[nodeId] ?? {};
+    this.values[nodeId][propertyId] = value;
+
+    this.publish(`${nodeId}/${propertyId}`, value);
   }
 
   subscribe(topic: string): Promise<void> {

@@ -273,6 +273,38 @@ describe("Set command handling", () => {
   });
 });
 
+describe("Setting values", () => {
+  it("publishes correct value and $target topics", async () => {
+    const mqttAdapter = new TestMqttAdapter();
+    const rootDevice = createTestRootDevice(mqttAdapter);
+
+    await rootDevice.start();
+    mqttAdapter.events = [];
+
+    await rootDevice.setValue("node-1", "property-1", "50");
+
+    assertEquals(mqttAdapter.events.length, 1);
+    assertEquals(mqttAdapter.events[0], {
+      topic: "homie/5/root-device/node-1/property-1",
+      payload: "50",
+      qos: 2,
+      retained: true,
+    });
+  });
+
+  it("ignores invalid values", async () => {
+    const mqttAdapter = new TestMqttAdapter();
+    const rootDevice = createTestRootDevice(mqttAdapter);
+
+    await rootDevice.start();
+    mqttAdapter.events = [];
+
+    await rootDevice.setValue("node-1", "property-1", "200");
+
+    assertEquals(mqttAdapter.events.length, 0);
+  });
+});
+
 describe("Creating child device", () => {
   it("Publishes correct topics and payloads", async () => {
     const mqttAdapter = new TestMqttAdapter();

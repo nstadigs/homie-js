@@ -50,7 +50,7 @@ function validateInteger(raw: string, format?: string): Result {
   }
 
   if (format) {
-    let [min, max, step] = format
+    const [min, max, step] = format
       .split(":")
       .map((v: string) => parseInt(v, 10))
       .map((v) => (isNaN(v) ? null : v));
@@ -66,11 +66,19 @@ function validateInteger(raw: string, format?: string): Result {
     }
 
     if (min != null && value < min) {
-      value = min;
+      return {
+        raw,
+        valid: false,
+        message: "Value too low",
+      };
     }
 
     if (max != null && value > max) {
-      value = max;
+      return {
+        raw,
+        valid: false,
+        message: "Value too high",
+      };
     }
 
     return {
