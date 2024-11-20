@@ -12,6 +12,7 @@ need. I hope to reach a state where I feel confident with contributions.
   - [x] Send initial payloads on init
   - [x] Send expected payloads on update
   - [x] Create child device
+  - [ ] Property values
   - [ ] Validate format
   - [ ] Handle set commands
   - [ ] Validate set command
