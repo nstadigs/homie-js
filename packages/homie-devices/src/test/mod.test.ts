@@ -1,6 +1,6 @@
 import { describe, it } from "jsr:@std/testing/bdd";
 import { assertEquals } from "jsr:@std/assert";
-import { createRootDevice, SetCommandCallback } from "../mod.ts";
+import { createRootDevice, type SetCommandCallback } from "../mod.ts";
 import { TestMqttAdapter } from "./utils.ts";
 
 describe("Initializing root device", () => {

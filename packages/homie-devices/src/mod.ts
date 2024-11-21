@@ -6,6 +6,7 @@ import {
 import { enablePatches, type Producer, produceWithPatches } from "immer";
 import fnv1a from "fnv1a";
 import type { MqttAdapter } from "./MqttAdapter.ts";
+import { memoize } from "./lib/memoize.ts";
 
 enablePatches();
 
@@ -22,11 +23,10 @@ class Device {
   id: string;
   children: Set<Device> = new Set();
   state: DeviceState = "disconnected";
-  log: string | null = null;
   readonly rootDevice: RootDevice;
   readonly parentDevice?: Device;
   configuration: DeviceConfig;
-  values: Record<string, Record<string, unknown>> = {};
+  valueCache: Record<string, Record<string, unknown>> = {};
   publishedDescription: DeviceDescription | null = null;
   #onMessageCallbacks: Set<SetCommandCallback> = new Set();
 
@@ -49,7 +49,7 @@ class Device {
 
     this.state = state;
 
-    await this.publish("$state", state);
+    await this.#publish("$state", state);
   }
 
   #createDescription = memoize(
@@ -98,8 +98,8 @@ class Device {
         : Object.keys(this.configuration?.nodes?.[nodeId].properties ?? {});
 
       return propertyIds.flatMap((propertyId) => [
-        this.publish(`${nodeId}/${propertyId}`, ""),
-        this.publish(`${nodeId}/${propertyId}/$target`, ""),
+        this.#publish(`${nodeId}/${propertyId}`, ""),
+        this.#publish(`${nodeId}/${propertyId}/$target`, ""),
       ]);
     });
 
@@ -108,7 +108,7 @@ class Device {
     const descriptionAsJson = JSON.stringify(description);
 
     await Promise.allSettled(topicRemovalRequests);
-    await this.rootDevice.publish("$description", descriptionAsJson);
+    await this.rootDevice.#publish("$description", descriptionAsJson);
     await this.setState("ready");
   }
 
@@ -122,7 +122,7 @@ class Device {
     await device.start();
     // Create new set to avoid referential equality
     this.children = new Set(this.children).add(device);
-    this.publish("$description", JSON.stringify(this.description));
+    this.#publish("$description", JSON.stringify(this.description));
     this.setState("ready");
 
     return device;
@@ -140,16 +140,25 @@ class Device {
       this.subscribe(`homie/5/${this.id}/+/+/set`),
     ]);
 
-    await this.publish("$description", JSON.stringify(this.description));
+    await this.#publish("$description", JSON.stringify(this.description));
     await this.setState("ready");
   }
 
-  publish(subTopic: string, payload: string): Promise<void> {
+  #log(level: "debug" | "info" | "warn" | "error" | "fatal", message: string) {
+    this.#publish(`$log/${level}`, message, 0, false);
+  }
+
+  #publish(
+    subTopic: string,
+    payload: string,
+    qos: 0 | 1 | 2 = 2,
+    retain: boolean = true,
+  ): Promise<void> {
     return this.rootDevice.mqttAdapter.publish(
       `homie/5/${this.id}/${subTopic}`,
       payload,
-      2,
-      true,
+      qos,
+      retain,
     );
   }
 
@@ -206,19 +215,25 @@ class Device {
     const property = this.configuration.nodes?.[nodeId].properties[propertyId];
 
     if (property == null) {
-      // TODO: Log error
+      console.error(
+        `${this.id}: Tried to set value ${value} for unexisting property ${nodeId}/${propertyId}.`,
+      );
+
       return;
     }
 
     if (!validateValue(property, value).valid) {
-      // TODO: Log error
+      console.error(
+        `${this.id}: Tried to set invalid value ${value} for ${nodeId}/${propertyId}.`,
+      );
+
       return;
     }
 
-    this.values[nodeId] = this.values[nodeId] ?? {};
-    this.values[nodeId][propertyId] = value;
+    this.valueCache[nodeId] = this.valueCache[nodeId] ?? {};
+    this.valueCache[nodeId][propertyId] = value;
 
-    this.publish(`${nodeId}/${propertyId}`, value);
+    this.#publish(`${nodeId}/${propertyId}`, value);
   }
 
   subscribe(topic: string): Promise<void> {
@@ -276,26 +291,4 @@ export function createRootDevice(
   mqttAdapter: MqttAdapter,
 ) {
   return new RootDevice(id, description, mqttAdapter);
-}
-
-function memoize<TArgs extends unknown[], TReturn>(
-  fn: (...args: TArgs) => TReturn,
-): (...args: TArgs) => TReturn {
-  let lastArgs: TArgs | [] = [];
-  let lastResult: TReturn;
-
-  return (...args: TArgs) => {
-    if (
-      lastArgs &&
-      lastArgs.length === args.length &&
-      args.every((arg, i) => arg === lastArgs[i])
-    ) {
-      return lastResult;
-    }
-
-    lastResult = fn(...args);
-    lastArgs = args;
-
-    return lastResult;
-  };
 }
