@@ -28,26 +28,27 @@ export class TestMqttAdapter implements MqttAdapter {
     return Promise.resolve();
   }
 
-  subscribe(topic: string) {
-    this.subscribedTopics.add(topic);
+  subscribe(topicPattern: string) {
+    this.subscribedTopics.add(topicPattern);
     return Promise.resolve();
   }
 
-  unsubscribe(topic: string) {
-    this.subscribedTopics.delete(topic);
+  unsubscribe(topicPattern: string) {
+    this.subscribedTopics.delete(topicPattern);
     return Promise.resolve();
   }
 
   publish(topic: string, payload: string, qos: 0 | 1 | 2, retained: boolean) {
     this.events.push({ topic, payload, qos, retained });
+
     this.messageCallbacks.forEach((callback) => {
-      // if (
-      //   [...this.subscribedTopics].some((subscribedTopic) =>
-      //     matchesMqttTopicPattern(subscribedTopic, topic)
-      //   )
-      // ) {
-      callback(topic, payload);
-      // }
+      if (
+        [...this.subscribedTopics].some((topicPattern) =>
+          matchesMqttTopicPattern(topic, topicPattern)
+        )
+      ) {
+        callback(topic, payload);
+      }
     });
     return Promise.resolve();
   }
@@ -65,8 +66,8 @@ export class TestMqttAdapter implements MqttAdapter {
   }
 }
 
-function matchesMqttTopicPattern(topic: string, pattern: string) {
-  const patternParts = pattern.split("/");
+function matchesMqttTopicPattern(topic: string, topicPattern: string) {
+  const patternParts = topicPattern.split("/");
   const topicParts = topic.split("/");
 
   for (let i = 0; i < patternParts.length; i++) {
