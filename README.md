@@ -23,6 +23,7 @@ need. I hope to reach a state where I feel confident with contributions.
   - [ ] Handle disconnect/reconnect
   - [ ] Handle QOS1 deduplication?
   - [ ] Persistent storage?
+  - [ ] Last will
   - [ ] ...finalize?
 - [ ] @nstadigs/homie-client (homie v5 client for automations etc)
   - [ ] ?
