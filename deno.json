@@ -2,7 +2,8 @@
   "workspace": [
     "./packages/homie-spec",
     "./packages/homie-devices",
-    "./packages/homie-client"
+    "./packages/homie-client",
+    "./packages/homie-lgtv"
   ],
   "fmt": {
     "exclude": ["**/vendor/"]

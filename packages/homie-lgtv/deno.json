@@ -1,0 +1,9 @@
+{
+  "name": "@nstadigs/homie-lgtv",
+  "version": "0.1.0",
+  "exports": "./src/main.ts",
+  "imports": {
+    "@deno/dnt": "jsr:@deno/dnt@^0.41.3",
+    "homie-devices": "jsr:@nstadigs/homie-devices"
+  }
+}
