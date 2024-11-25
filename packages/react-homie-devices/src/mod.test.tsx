@@ -11,7 +11,7 @@ Deno.test("mod", async () => {
       const timeoutId = setTimeout(() => {
         console.log("-------------------------- timeout");
         setSomeValue(someValue + 1);
-      }, 5000);
+      }, 1000);
 
       return () => {
         clearTimeout(timeoutId);
@@ -20,21 +20,28 @@ Deno.test("mod", async () => {
 
     return (
       <Device id="parent-device">
-        <Device id="child-device" />
+        <Device id={`child-device-${someValue}`}>
+          {someValue !== 1 && <Node id="some-other-node1" />}
+          {someValue === 1 && <Node id="some-other-node2" />}
+        </Device>
         <Node id="some-node">
           <Property id="some-property" />
         </Node>
-        {someValue !== 1 && <Node id="some-other-node" />}
+        <Property id="some-other-property" />
       </Device>
     );
   }
 
-  register(
+  const unregister = register(
     <Controller />,
     new TestMqttAdapter(),
   );
 
-  await new Promise((resolve) => setTimeout(resolve, 10000));
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+
+  console.log("----------------------- Unregistering");
+
+  unregister();
 });
 
 export class TestMqttAdapter implements MqttAdapter {

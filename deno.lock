@@ -1,6 +1,8 @@
 {
   "version": "4",
   "specifiers": {
+    "jsr:@bukhalo/webos-client@*": "0.2.1",
+    "jsr:@bukhalo/wol@*": "2.0.1",
     "jsr:@david/code-block-writer@^13.0.2": "13.0.3",
     "jsr:@deno/cache-dir@~0.10.3": "0.10.3",
     "jsr:@deno/dnt@*": "0.41.3",
@@ -10,6 +12,7 @@
     "jsr:@std/assert@0.226": "0.226.0",
     "jsr:@std/assert@^1.0.8": "1.0.8",
     "jsr:@std/bytes@0.223": "0.223.0",
+    "jsr:@std/bytes@^1.0.1": "1.0.4",
     "jsr:@std/fmt@0.223": "0.223.0",
     "jsr:@std/fmt@1": "1.0.3",
     "jsr:@std/fs@0.223": "0.223.0",
@@ -28,14 +31,31 @@
     "jsr:@ts-morph/common@0.24": "0.24.0",
     "npm:@sindresorhus/fnv1a@*": "3.1.0",
     "npm:@types/node@*": "22.5.4",
+    "npm:@types/react-reconciler@*": "0.28.8",
+    "npm:@types/react-reconciler@~0.28.8": "0.28.8",
+    "npm:@types/react@*": "18.3.12",
+    "npm:@types/react@^18.3.12": "18.3.12",
     "npm:immer@*": "10.1.1",
+    "npm:lgtv2@*": "1.6.3",
     "npm:mkdirp@*": "3.0.1",
     "npm:persist-path@*": "1.0.2",
+    "npm:react-reconciler@*": "0.29.2_react@18.3.1",
+    "npm:react-reconciler@~0.29.2": "0.29.2_react@18.3.1",
+    "npm:react@^18.3.1": "18.3.1",
     "npm:tcp-ping@*": "0.1.1",
     "npm:wake_on_lan@*": "1.0.0",
     "npm:websocket@*": "1.0.35"
   },
   "jsr": {
+    "@bukhalo/webos-client@0.2.1": {
+      "integrity": "1da8dc4b858cf1e09fc0a14eb8e5363ac873367b428da310ad6e18d59785491d"
+    },
+    "@bukhalo/wol@2.0.1": {
+      "integrity": "fb28e315e7f682ba54a0478c21d8b7aa1c855248e4fa9b0c4b13511c2a6ccbf3",
+      "dependencies": [
+        "jsr:@std/bytes@^1.0.1"
+      ]
+    },
     "@david/code-block-writer@13.0.3": {
       "integrity": "f98c77d320f5957899a61bfb7a9bead7c6d83ad1515daee92dbacc861e13bb7f"
     },
@@ -78,6 +98,9 @@
     "@std/bytes@0.223.0": {
       "integrity": "84b75052cd8680942c397c2631318772b295019098f40aac5c36cead4cba51a8"
     },
+    "@std/bytes@1.0.4": {
+      "integrity": "11a0debe522707c95c7b7ef89b478c13fb1583a7cfb9a85674cd2cc2e3a28abc"
+    },
     "@std/fmt@0.223.0": {
       "integrity": "6deb37794127dfc7d7bded2586b9fc6f5d50e62a8134846608baf71ffc1a5208"
     },
@@ -106,7 +129,7 @@
       "integrity": "2d8c3c2ab3a515619b90da2c6ff5ea7b75a94383259ef4d02116b228393f84f1",
       "dependencies": [
         "jsr:@std/assert@0.223",
-        "jsr:@std/bytes"
+        "jsr:@std/bytes@0.223"
       ]
     },
     "@std/path@0.223.0": {
@@ -161,11 +184,30 @@
         "undici-types"
       ]
     },
+    "@types/prop-types@15.7.13": {
+      "integrity": "sha512-hCZTSvwbzWGvhqxp/RqVqwU999pBf2vp7hzIjiYOsl8wqOmUxkQ6ddw1cV3l8811+kdUFus/q4d1Y3E3SyEifA=="
+    },
+    "@types/react-reconciler@0.28.8": {
+      "integrity": "sha512-SN9c4kxXZonFhbX4hJrZy37yw9e7EIxcpHCxQv5JUS18wDE5ovkQKlqQEkufdJCCMfuI9BnjUJvhYeJ9x5Ra7g==",
+      "dependencies": [
+        "@types/react"
+      ]
+    },
+    "@types/react@18.3.12": {
+      "integrity": "sha512-D2wOSq/d6Agt28q7rSI3jhU7G6aiuzljDGZ2hTZHIkrTLUI+AF3WMeKkEZ9nN2fkBAlcktT6vcZjDFiIhMYEQw==",
+      "dependencies": [
+        "@types/prop-types",
+        "csstype"
+      ]
+    },
     "bufferutil@4.0.8": {
       "integrity": "sha512-4T53u4PdgsXqKaIctwF8ifXlRTTmEPJ8iEPWFdGZvcf7sbwYo6FKFEX9eNNAnzFZ7EzJAQ3CJeOtCRA4rDp7Pw==",
       "dependencies": [
         "node-gyp-build"
       ]
+    },
+    "csstype@3.1.3": {
+      "integrity": "sha512-M1uQkMl8rQK/szD0LNhtqxIPLpimGm8sOBwU7lLnCpSbTyY3yeU1Vc7l4KT5zT4s/yOxHH5O7tIuuLOCnLADRw=="
     },
     "d@1.0.2": {
       "integrity": "sha512-MOqHvMWF9/9MX6nza0KgvFH4HpMU0EF5uUDXqX/BtxtU8NfB0QzRtJ8Oe/6SuS4kbhyzVJwjd97EA4PKrzJ8bw==",
@@ -232,8 +274,28 @@
     "is-typedarray@1.0.0": {
       "integrity": "sha512-cyA56iCMHAh5CdzjJIa4aohJyeO1YbwLi3Jc35MmRU6poroFjIGZzUzupGiRPOjgHg9TLu43xbpwXk523fMxKA=="
     },
+    "js-tokens@4.0.0": {
+      "integrity": "sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ=="
+    },
+    "lgtv2@1.6.3": {
+      "integrity": "sha512-iinwKz9MzxS7H78tBycwCBV/Y8lD7hVWs8zGjEJoi4xRk05SLUU4Xct/Y1VaspfMOgDZ3c0VRF1gA8mLMorqZg==",
+      "dependencies": [
+        "mkdirp@1.0.4",
+        "persist-path",
+        "websocket"
+      ]
+    },
+    "loose-envify@1.4.0": {
+      "integrity": "sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==",
+      "dependencies": [
+        "js-tokens"
+      ]
+    },
     "minimist@1.2.8": {
       "integrity": "sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA=="
+    },
+    "mkdirp@1.0.4": {
+      "integrity": "sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw=="
     },
     "mkdirp@3.0.1": {
       "integrity": "sha512-+NsyUUAZDmo6YVHzL/stxSu3t9YS1iljliy3BSDrXJ/dkn1KYdmtZODGGjLcc9XLgVVpH4KshHB8XmZgMhaBXg=="
@@ -249,6 +311,26 @@
     },
     "persist-path@1.0.2": {
       "integrity": "sha512-IBSK3cuCZJSesAq9s0DZbeLn+E8xqJbY/3L+VjNxxwLp/zjTATn8tYJQ44RUhOrLNEexxkC9surCdjJ+iVpa4g=="
+    },
+    "react-reconciler@0.29.2_react@18.3.1": {
+      "integrity": "sha512-zZQqIiYgDCTP/f1N/mAR10nJGrPD2ZR+jDSEsKWJHYC7Cm2wodlwbR3upZRdC3cjIjSlTLNVyO7Iu0Yy7t2AYg==",
+      "dependencies": [
+        "loose-envify",
+        "react",
+        "scheduler"
+      ]
+    },
+    "react@18.3.1": {
+      "integrity": "sha512-wS+hAgJShR0KhEvPJArfuPVN1+Hz1t0Y6n5jLrGQbkb4urgPE/0Rve+1kMB1v/oWgHgm4WIcV+i7F2pTVj+2iQ==",
+      "dependencies": [
+        "loose-envify"
+      ]
+    },
+    "scheduler@0.23.2": {
+      "integrity": "sha512-UOShsPwz7NrMUqhR6t0hWjFduvOzbtv7toDH1/hIrfRNIDBnnBWd0CwJTGvTpngVlmwGCdP9/Zl/tVrDqcuYzQ==",
+      "dependencies": [
+        "loose-envify"
+      ]
     },
     "tcp-ping@0.1.1": {
       "integrity": "sha512-7Ed10Ds0hYnF+O1lfiZ2iSZ1bCAj+96Madctebmq7Y1ALPWlBY4YI8C6pCL+UTlshFY5YogixKLpgDP/4BlHrw=="
@@ -305,6 +387,22 @@
           "jsr:@nstadigs/homie-spec@*",
           "npm:@sindresorhus/fnv1a@*",
           "npm:immer@*"
+        ]
+      },
+      "packages/homie-lgtv": {
+        "dependencies": [
+          "jsr:@deno/dnt@~0.41.3",
+          "jsr:@nstadigs/homie-devices@*"
+        ]
+      },
+      "packages/react-homie-devices": {
+        "dependencies": [
+          "jsr:@deno/dnt@~0.41.3",
+          "jsr:@nstadigs/homie-spec@*",
+          "npm:@types/react-reconciler@~0.28.8",
+          "npm:@types/react@^18.3.12",
+          "npm:react-reconciler@~0.29.2",
+          "npm:react@^18.3.1"
         ]
       }
     }

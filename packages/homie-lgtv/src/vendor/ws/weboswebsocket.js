@@ -12,7 +12,7 @@ import { EventEmitter } from "node:events";
 import util from "node:util";
 import WebSocketClient from "npm:websocket";
 import ppath from "npm:persist-path";
-import mkdirp from "npm:mkdirp";
+import { mkdirp } from "npm:mkdirp";
 import PairingJson from "./pairing.js";
 
 var SpecializedSocket = function (ws) {

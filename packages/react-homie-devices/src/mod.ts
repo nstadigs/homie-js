@@ -1,14 +1,23 @@
-// @deno-types="npm:@types/react-reconciler"
-import ReactReconciler from "react-reconciler";
+// @deno-types="@types/react-reconciler"
+import ReactReconciler from "npm:react-reconciler";
+// @deno-types="@types/react-reconciler/constants"
+import { DefaultEventPriority } from "react-reconciler/constants.js";
 import type { MqttAdapter } from "@nstadigs/homie-devices";
-import type React from "react";
+import type { DeviceDescription } from "@nstadigs/homie-spec";
+// @deno-types="npm:@types/react"
+import React from "react";
 
 type Container = {
   changes: Change[];
-  devices: Record<string, {}>;
+  children: React.ReactElement[];
 };
 
 type Type = "device$" | "node$" | "property$";
+
+type Device = {
+  id: string;
+  description: DeviceDescription;
+};
 
 type DeviceInstance = {
   type: "device";
@@ -33,7 +42,7 @@ const reconciler = ReactReconciler<
   Type,
   Instance["props"],
   Container,
-  Instance,
+  React.ReactElement,
   unknown,
   unknown,
   unknown,
@@ -53,57 +62,48 @@ const reconciler = ReactReconciler<
   // -------------------
 
   createInstance(type, props) {
-    if (type === "device$") {
-      return { type: "device", props, nodes: {} };
+    console.log("createInstance called with", type, props.id);
+    if (!props.id) {
+      throw new Error("All elements must have an id");
     }
 
-    if (type === "node$") {
-      return {
-        type: "node",
-        props,
-        properties: {},
-      };
-    }
-
-    if (type === "property$") {
-      return { type: "property", props };
-    }
-
-    throw new Error(
-      `Component type: ${type} is not supported. Use export Node, Device, or Property`,
-    );
+    return {
+      key: props.id,
+      type,
+      props,
+      children: [],
+    };
   },
 
   createTextInstance() {
     throw new Error("Text nodes are not supported");
   },
 
-  appendInitialChild() {
-    console.log("appendInitialChild called");
+  appendInitialChild(parentInstance, child) {
+    console.log(
+      "appendInitialChild called with",
+      parentInstance.type,
+      (child as any).type as string,
+    );
   },
 
   finalizeInitialChildren(instance) {
-    console.log("finalizeInitialChildren called with", instance);
-    return true;
-  },
-
-  prepareUpdate() {
-    console.log("prepareUpdate called");
-    return {};
-  },
-
-  shouldSetTextContent() {
-    console.log("shouldSetTextContent called");
     return false;
   },
 
-  getRootHostContext(rootContet) {
-    console.log("getRootHostContext called", rootContet);
-    return rootContet;
+  prepareUpdate() {
+    return null;
+  },
+
+  shouldSetTextContent() {
+    return false;
+  },
+
+  getRootHostContext(rootContext) {
+    return rootContext;
   },
 
   getChildHostContext(parentHostContext, type) {
-    console.log("getChildHostContext called with", parentHostContext, type);
     return parentHostContext;
   },
 
@@ -113,7 +113,7 @@ const reconciler = ReactReconciler<
 
   prepareForCommit() {
     console.log("prepareForCommit called");
-    return {};
+    return null;
   },
 
   resetAfterCommit(container) {
@@ -138,35 +138,23 @@ const reconciler = ReactReconciler<
   isPrimaryRenderer: true,
 
   getCurrentEventPriority() {
-    console.log("getCurrentEventPriority called");
-    return 0;
+    return DefaultEventPriority;
   },
 
   getInstanceFromNode(node: any) {
-    console.log("getInstanceFromNode called with", node);
     return null;
   },
 
-  beforeActiveInstanceBlur() {
-    console.log("beforeActiveInstanceBlur called");
-  },
+  beforeActiveInstanceBlur() {},
+  afterActiveInstanceBlur() {},
 
-  afterActiveInstanceBlur() {
-    console.log("afterActiveInstanceBlur called");
-  },
-
-  prepareScopeUpdate() {
-    console.log("prepareScopeUpdate called");
-  },
+  prepareScopeUpdate() {},
 
   getInstanceFromScope() {
-    console.log("getInstanceFromScope called");
     return null;
   },
 
-  detachDeletedInstance() {
-    console.log("detachDeletedInstance called");
-  },
+  detachDeletedInstance() {},
 
   // -------------------
   // Persistence Methods
@@ -174,36 +162,61 @@ const reconciler = ReactReconciler<
 
   cloneInstance(
     instance,
-    updatePayload,
+    _updatePayload,
     type,
     oldProps,
     newProps,
-    internalInstanceHandle,
-    keepChildren,
-    recyclableInstance,
+    __DEV__internalInstanceHandle,
+    _keepChildren,
+    _recyclableInstance,
   ) {
-    console.log("cloneInstance called");
-    return { ...instance, props: newProps };
+    const isEqual = instance.type === type && shallowEqual(oldProps, newProps);
+
+    console.log("cloneInstance called with", instance.type, newProps.id);
+
+    if (isEqual) {
+      return instance;
+    }
+
+    return React.cloneElement(instance, newProps);
   },
 
-  createContainerChildSet(container) {
-    console.log("createContainerChildSet called");
+  createContainerChildSet() {
     return [];
   },
 
   appendChildToContainerChildSet(childSet, child) {
-    console.log("appendChildToContainerChildSet called");
     childSet.push(child);
   },
 
-  finalizeContainerChildren(container, newChildren) {
-    console.log("finalizeContainerChildren called");
-    container.devices = newChildren;
+  removeChild(container, child) {
+    console.log("removeChild called with", (child as any).props.id);
   },
 
-  replaceContainerChildren(container, newChildren) {
-    console.log("replaceContainerChildren called");
-    container.devices = newChildren;
+  finalizeContainerChildren() {},
+
+  replaceContainerChildren(container, newChildren: React.ReactElement[]) {
+    const changes = [];
+
+    // Calculate diff between newChildren and container.devices
+    // for (const child of newChildren) {
+    //   const oldChild = container.devices.find((c) =>
+    //     c.props.id === child.props.id
+    //   );
+
+    //   if (oldChild == null) {
+    //     changes.push({ type: "add", id: child.props.id });
+    //     continue;
+    //   }
+
+    //   if (oldChild !== child) {
+    //     changes.push({ type: "update", id: child.props.id });
+    //   }
+    // }
+
+    container.children = newChildren;
+
+    // Calculate changes
   },
 });
 
@@ -222,10 +235,9 @@ export function register(
   mqttAdapter: MqttAdapter,
 ) {
   const changes: Change[] = [];
-  const devices = {};
 
   const container = reconciler.createContainer(
-    { changes, devices },
+    { changes, children: [] },
     0,
     null,
     true,
@@ -236,4 +248,54 @@ export function register(
   );
 
   reconciler.updateContainer(whatToRender, container, null, null);
+
+  return () => {
+    reconciler.updateContainer(null, container, null, null);
+  };
 }
+
+function traverseAndCollectChanges(
+  instance: Instance,
+  changes: Change[],
+  mqttAdapter: MqttAdapter,
+) {
+  if (instance.type === "device") {
+  }
+}
+
+function shallowEqual(objA: unknown, objB: unknown): boolean {
+  if (Object.is(objA, objB)) {
+    return true;
+  }
+
+  if (
+    typeof objA !== "object" || objA === null ||
+    typeof objB !== "object" || objB === null
+  ) {
+    return false;
+  }
+
+  const keysA = Object.keys(objA);
+  const keysB = Object.keys(objB);
+
+  if (keysA.length !== keysB.length) {
+    return false;
+  }
+
+  // Test for A's keys different from B.
+  for (let i = 0; i < keysA.length; i++) {
+    if (
+      !hasOwnProperty.call(objB, keysA[i]) ||
+      !Object.is(
+        (objA as Record<string, unknown>)[keysA[i]],
+        (objB as Record<string, unknown>)[keysA[i]],
+      )
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+const hasOwnProperty = Object.prototype.hasOwnProperty;

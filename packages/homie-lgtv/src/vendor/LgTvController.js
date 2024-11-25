@@ -1,6 +1,6 @@
 import LGTV from "./ws/weboswebsocket.js";
-import * as wol from "npm:wake_on_lan";
-import * as tcpp from "npm:tcp-ping";
+import * as wol from "wake_on_lan";
+import * as tcpp from "tcp-ping";
 import { EventEmitter } from "node:events";
 import Events from "./Events.js";
 
