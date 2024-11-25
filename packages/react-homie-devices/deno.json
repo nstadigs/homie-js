@@ -1,0 +1,13 @@
+{
+  "name": "@nstadigs/react-homie-devices",
+  "version": "0.1.0",
+  "exports": "./src/mod.ts",
+  "imports": {
+    "@deno/dnt": "jsr:@deno/dnt@^0.41.3",
+    "@types/react": "npm:@types/react@^18.3.12",
+    "@types/react-reconciler": "npm:@types/react-reconciler@^0.28.8",
+    "homie-spec": "jsr:@nstadigs/homie-spec",
+    "react": "npm:react@^18.3.1",
+    "react-reconciler": "npm:react-reconciler@^0.29.2"
+  }
+}

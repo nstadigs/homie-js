@@ -7,12 +7,12 @@
 
 // NOTE merdok -> Copy of the above library as it seems not to be maintained anymore...
 
-import * as fs from "fs";
+import * as fs from "node:fs";
 import { EventEmitter } from "node:events";
-import util from "util";
-import WebSocketClient from "websocket";
-import ppath from "persist-path";
-import mkdirp from "mkdirp";
+import util from "node:util";
+import WebSocketClient from "npm:websocket";
+import ppath from "npm:persist-path";
+import mkdirp from "npm:mkdirp";
 import PairingJson from "./pairing.js";
 
 var SpecializedSocket = function (ws) {
@@ -58,10 +58,8 @@ var LGTV = function (config) {
 
   if (typeof config.clientKey === "undefined") {
     mkdirp(ppath("lgtv2"));
-    config.keyFile = config.keyFile
-      ? config.keyFile
-      : ppath("lgtv2/keyfile-") +
-        config.url.replace(/[a-z]+:\/\/([0-9a-zA-Z-_.]+):\d+/, "$1");
+    config.keyFile = config.keyFile ? config.keyFile : ppath("lgtv2/keyfile-") +
+      config.url.replace(/[a-z]+:\/\/([0-9a-zA-Z-_.]+):\d+/, "$1");
     try {
       that.clientKey = fs.readFileSync(config.keyFile).toString();
     } catch (err) {}
@@ -327,6 +325,7 @@ var LGTV = function (config) {
     if (connection && connection.close) {
       connection.close();
     }
+
     autoReconnect = false;
 
     Object.keys(specializedSockets).forEach(
