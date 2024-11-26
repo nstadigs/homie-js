@@ -9,10 +9,10 @@ import React from "react";
 
 type Container = {
   changes: Change[];
-  children: React.ReactElement[];
+  rootDevices: Device[];
 };
 
-type Type = "device$" | "node$" | "property$";
+type ElementType = "device$" | "node$" | "property$";
 
 type Device = {
   id: string;
@@ -23,6 +23,7 @@ type DeviceInstance = {
   type: "device";
   props: Record<string, string>;
   nodes: Record<string, NodeInstance>;
+  devices: Record<string, DeviceInstance>;
 };
 
 type NodeInstance = {
@@ -39,10 +40,10 @@ type PropertyInstance = {
 type Instance = DeviceInstance | NodeInstance | PropertyInstance;
 
 const reconciler = ReactReconciler<
-  Type,
+  ElementType,
   Instance["props"],
   Container,
-  React.ReactElement,
+  Instance,
   unknown,
   unknown,
   unknown,
@@ -62,29 +63,80 @@ const reconciler = ReactReconciler<
   // -------------------
 
   createInstance(type, props) {
-    console.log("createInstance called with", type, props.id);
+    if (type !== "device$" && type !== "node$" && type !== "property$") {
+      throw new Error(
+        `Invalid type: ${type}. Use component Device, Node, or Property`,
+      );
+    }
+
     if (!props.id) {
       throw new Error("All elements must have an id");
     }
 
-    return {
-      key: props.id,
-      type,
-      props,
-      children: [],
-    };
+    switch (type) {
+      case "device$":
+        return {
+          type: "device",
+          props,
+          nodes: {},
+          devices: {},
+        };
+      case "node$":
+        return {
+          type: "node",
+          props,
+          properties: {},
+        };
+      case "property$":
+        return {
+          type: "property",
+          props,
+        };
+    }
   },
 
   createTextInstance() {
     throw new Error("Text nodes are not supported");
   },
 
-  appendInitialChild(parentInstance, child) {
-    console.log(
-      "appendInitialChild called with",
-      parentInstance.type,
-      (child as any).type as string,
-    );
+  appendInitialChild(parentInstance: Instance, child: Instance) {
+    switch (parentInstance.type) {
+      case "device":
+        switch (child.type) {
+          case "device":
+            if (parentInstance.devices[child.props.id] != null) {
+              throw new Error(
+                `Child device with id ${child.props.id} already exists in device with id ${parentInstance.props.id}`,
+              );
+            }
+            (parentInstance as DeviceInstance).devices[child.props.id] = child;
+            break;
+
+          case "node":
+            (parentInstance as DeviceInstance).nodes[child.props.id] = child;
+            break;
+
+          default:
+            throw new Error(
+              "Only devices and nodes can be children of devices",
+            );
+        }
+
+        break;
+
+      case "node":
+        if (child.type !== "property") {
+          throw new Error(
+            `Only properties can be children of nodes. Got: ${child.type}`,
+          );
+        }
+
+        parentInstance.properties[child.props.id] = child;
+        break;
+
+      case "property":
+        throw new Error(`Properties cannot have children. Got: ${child.type}`);
+    }
   },
 
   finalizeInitialChildren(instance) {
@@ -92,7 +144,7 @@ const reconciler = ReactReconciler<
   },
 
   prepareUpdate() {
-    return null;
+    return {};
   },
 
   shouldSetTextContent() {
@@ -147,7 +199,6 @@ const reconciler = ReactReconciler<
 
   beforeActiveInstanceBlur() {},
   afterActiveInstanceBlur() {},
-
   prepareScopeUpdate() {},
 
   getInstanceFromScope() {
@@ -167,36 +218,69 @@ const reconciler = ReactReconciler<
     oldProps,
     newProps,
     __DEV__internalInstanceHandle,
-    _keepChildren,
-    _recyclableInstance,
+    keepChildren,
   ) {
-    const isEqual = instance.type === type && shallowEqual(oldProps, newProps);
+    const [isShallowEqual] = shallowEqual(oldProps, newProps);
+    const typeIsEqual = `${instance.type}$` === type;
 
-    console.log("cloneInstance called with", instance.type, newProps.id);
-
-    if (isEqual) {
+    if (typeIsEqual && isShallowEqual) {
       return instance;
     }
 
-    return React.cloneElement(instance, newProps);
+    switch (instance.type) {
+      case "device": {
+        // Recreating both nodes and devices even if only one of them changed
+        // is the set of children. This is because we don't have a way to
+        // determine which children were added or removed. And in practice,
+        // it should not matter because the description has to be resent
+        // anyway.
+        const devices = keepChildren ? instance.devices : {};
+        const nodes = keepChildren ? instance.nodes : {};
+
+        return {
+          type: "device",
+          props: newProps,
+          nodes: nodes,
+          devices,
+        };
+      }
+      case "node": {
+        const properties = keepChildren ? instance.properties : {};
+        return {
+          type: "node",
+          props: newProps,
+          properties,
+        };
+      }
+      case "property":
+        return {
+          type: "property",
+          props: newProps,
+        };
+    }
   },
 
   createContainerChildSet() {
     return [];
   },
 
-  appendChildToContainerChildSet(childSet, child) {
+  appendChildToContainerChildSet(childSet, child: Instance) {
+    if (child.type !== "device") {
+      throw new Error(
+        `Only devices can be at the root of the tree. Got: ${child.type}`,
+      );
+    }
+
     childSet.push(child);
   },
 
-  removeChild(container, child) {
-    console.log("removeChild called with", (child as any).props.id);
+  finalizeContainerChildren() {
   },
 
-  finalizeContainerChildren() {},
-
-  replaceContainerChildren(container, newChildren: React.ReactElement[]) {
+  replaceContainerChildren(container, newChildren: Device[]) {
     const changes = [];
+
+    console.log(newChildren);
 
     // Calculate diff between newChildren and container.devices
     // for (const child of newChildren) {
@@ -214,7 +298,7 @@ const reconciler = ReactReconciler<
     //   }
     // }
 
-    container.children = newChildren;
+    container.rootDevices = newChildren;
 
     // Calculate changes
   },
@@ -237,7 +321,7 @@ export function register(
   const changes: Change[] = [];
 
   const container = reconciler.createContainer(
-    { changes, children: [] },
+    { changes, rootDevices: [] },
     0,
     null,
     true,
@@ -251,6 +335,8 @@ export function register(
 
   return () => {
     reconciler.updateContainer(null, container, null, null);
+    reconciler.flushPassiveEffects();
+    reconciler.flushSync();
   };
 }
 
@@ -263,23 +349,41 @@ function traverseAndCollectChanges(
   }
 }
 
-function shallowEqual(objA: unknown, objB: unknown): boolean {
+function buildDeviceDescription(
+  device: DeviceInstance,
+  parentDevice: DeviceInstance,
+): DeviceDescription {
+  const nodes = {}; // TODO
+
+  return {
+    homie: "5.0",
+
+    // TODO: Hash
+    version: Date.now(),
+    children: Object.keys(device.devices),
+    root: parentDevice?.props.rootId ?? parentDevice?.props.id,
+    parent: parentDevice?.props.id,
+    nodes,
+  };
+}
+
+function shallowEqual(objA: unknown, objB: unknown): [boolean, string | null] {
   if (Object.is(objA, objB)) {
-    return true;
+    return [true, null];
   }
 
   if (
     typeof objA !== "object" || objA === null ||
     typeof objB !== "object" || objB === null
   ) {
-    return false;
+    return [false, "type differs"];
   }
 
   const keysA = Object.keys(objA);
   const keysB = Object.keys(objB);
 
   if (keysA.length !== keysB.length) {
-    return false;
+    return [false, "length differs"];
   }
 
   // Test for A's keys different from B.
@@ -291,11 +395,11 @@ function shallowEqual(objA: unknown, objB: unknown): boolean {
         (objB as Record<string, unknown>)[keysA[i]],
       )
     ) {
-      return false;
+      return [false, keysA[i]];
     }
   }
 
-  return true;
+  return [true, null];
 }
 
 const hasOwnProperty = Object.prototype.hasOwnProperty;

@@ -1,6 +1,6 @@
 import React from "react";
 import { register } from "./mod.ts";
-import { MqttAdapter, OnMessageCallback } from "@nstadigs/homie-devices";
+import type { MqttAdapter, OnMessageCallback } from "@nstadigs/homie-devices";
 import { Device, Node, Property } from "./devices.tsx";
 
 Deno.test("mod", async () => {
@@ -19,20 +19,23 @@ Deno.test("mod", async () => {
     });
 
     return (
-      <Device id="parent-device">
-        <Device id={`child-device-${someValue}`}>
-          {someValue !== 1 && <Node id="some-other-node1" />}
-          {someValue === 1 && <Node id="some-other-node2" />}
+      <>
+        <Device id="root-device">
+          <Device id={`child-device-${someValue}`}>
+            {someValue !== 1 && <Node id="some-other-node1" />}
+            {someValue === 1 && <Node id="some-other-node2" />}
+          </Device>
+          <Node id="some-node">
+            <Property id="some-property" />
+            <Property id="some-other-property" />
+          </Node>
         </Device>
-        <Node id="some-node">
-          <Property id="some-property" />
-        </Node>
-        <Property id="some-other-property" />
-      </Device>
+        <Device id="another-root-device" />
+      </>
     );
   }
 
-  const unregister = register(
+  const cleanUp = register(
     <Controller />,
     new TestMqttAdapter(),
   );
@@ -41,7 +44,7 @@ Deno.test("mod", async () => {
 
   console.log("----------------------- Unregistering");
 
-  unregister();
+  cleanUp();
 });
 
 export class TestMqttAdapter implements MqttAdapter {
