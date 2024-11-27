@@ -2,6 +2,10 @@
   "workspace": [
     "./packages/*"
   ],
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "@nstadigs/react-homie-devices"
+  },
   "fmt": {
     "exclude": ["**/vendor/"]
   },
@@ -10,9 +14,5 @@
   },
   "test": {
     "exclude": ["**/vendor/"]
-  },
-  "compilerOptions": {
-    "jsx": "react-jsx",
-    "jsxImportSource": "react"
   }
 }

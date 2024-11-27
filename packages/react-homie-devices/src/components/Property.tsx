@@ -1,3 +1,10 @@
+export function Property(
+  props: JSX.PropertyElementProps,
+) {
+  // create a custom jsx element
+  return <property$ {...props} />;
+}
+
 export function Float(
   props: JSX.PropertyElementProps,
 ) {

@@ -29,7 +29,6 @@ Deno.test("mod", async () => {
           <Node id="some-node">
             <Property id="some-property" datatype="test" />
             <Property id="some-other-property" datatype="" />
-            <Enum id="some-enum" options={["one", "two", "three"]} />
           </Node>
         </Device>
         <Device id="another-root-device" />

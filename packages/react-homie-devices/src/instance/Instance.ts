@@ -1,7 +1,6 @@
 import { Device } from "./Device.ts";
 import { Node } from "./Node.ts";
 import { Property } from "./Property.ts";
-import type { JSX } from "../jsx.d.ts";
 
 export type Instance = {
   id: string;

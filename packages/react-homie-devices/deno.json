@@ -1,7 +1,10 @@
 {
   "name": "@nstadigs/react-homie-devices",
   "version": "0.1.0",
-  "exports": "./src/mod.ts",
+  "exports": {
+    ".": "./src/mod.ts",
+    "./jsx-runtime": "./src/jsx-runtime.ts"
+  },
 
   "imports": {
     "@deno/dnt": "jsr:@deno/dnt@^0.41.3",

@@ -1,6 +1,5 @@
 import type { Instance } from "./Instance.ts";
 import { Property } from "./Property.ts";
-import type { JSX } from "../jsx.d.ts";
 
 export class Node implements Instance {
   instanceType = "node" as const;
