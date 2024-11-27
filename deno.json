@@ -10,5 +10,9 @@
   },
   "test": {
     "exclude": ["**/vendor/"]
+  },
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "react"
   }
 }

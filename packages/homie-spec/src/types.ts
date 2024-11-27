@@ -102,17 +102,7 @@ export type PropertyBase = {
   name: string;
 
   /** The data type. */
-  datatype:
-    | "string"
-    | "integer"
-    | "float"
-    | "boolean"
-    | "string"
-    | "enum"
-    | "color"
-    | "datetime"
-    | "duration"
-    | "json";
+  datatype: string;
 
   /** Specifies restrictions or options for the given data type. */
   format?: string;

@@ -1,21 +1,27 @@
+import type { Property } from "@nstadigs/homie-spec";
+
 declare namespace JSX {
-  type DeviceNode = {
-    children?: Array<DeviceNode | NodeNode>;
+  type DeviceElementProps = {
     id: string;
+    children?: React.ReactNode;
+    name?: string;
+    type?: string;
   };
 
-  type NodeNode = {
-    children?: Array<PropertyNode> | PropertyNode;
+  type NodeElementProps = {
     id: string;
+    children?: React.ReactNode;
+    name?: string;
+    type?: string;
   };
 
-  type PropertyNode = {
+  type PropertyElementProps = Property & {
     id: string;
   };
 
   interface IntrinsicElements {
-    device$: DeviceNode;
-    node$: NodeNode;
-    property$: PropertyNode;
+    device$: DeviceElementProps;
+    node$: NodeElementProps;
+    property$: PropertyElementProps;
   }
 }
