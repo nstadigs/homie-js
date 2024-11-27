@@ -17,7 +17,7 @@ import type {
 } from "./jsx-runtime.ts";
 
 type Container = {
-  rootDevices: Device[];
+  rootDevices: Record<string, Device>;
   mqtt: MqttAdapter;
 };
 
@@ -37,7 +37,7 @@ const reconciler = ReactReconciler<
   unknown,
   unknown,
   unknown,
-  unknown[], // ChildSet
+  Record<string, Device>, // ChildSet
   unknown,
   unknown
 >({
@@ -90,7 +90,7 @@ const reconciler = ReactReconciler<
   },
 
   prepareUpdate() {
-    return {};
+    return null;
   },
 
   shouldSetTextContent() {
@@ -110,7 +110,6 @@ const reconciler = ReactReconciler<
   },
 
   prepareForCommit() {
-    console.log("prepareForCommit called");
     return null;
   },
 
@@ -118,7 +117,7 @@ const reconciler = ReactReconciler<
   },
 
   preparePortalMount() {
-    console.log("preparePortalMount called");
+    throw new Error("Portals are not supported");
   },
 
   scheduleTimeout(cb, ms) {
@@ -152,7 +151,7 @@ const reconciler = ReactReconciler<
   detachDeletedInstance() {},
 
   createContainerChildSet() {
-    return [];
+    return {};
   },
 
   appendChildToContainerChildSet(childSet, child: Instance) {
@@ -162,14 +161,128 @@ const reconciler = ReactReconciler<
       );
     }
 
-    childSet.push(child);
+    childSet[child.id] = child;
   },
 
   finalizeContainerChildren() {
   },
 
-  replaceContainerChildren(container, newChildren: Device[]) {
-    console.log(newChildren.map(generateDeviceDescription));
+  replaceContainerChildren(container, newChildren: Record<string, Device>) {
+    const seenDeviceIds: string[] = [];
+
+    type Change = {
+      type: "add" | "remove" | "update";
+      device: Device;
+      path: string;
+    };
+
+    const changedDevices: Change[] = [];
+
+    // console.log("newChildren", newChildren);
+
+    function collectChangedDevices(
+      oldDevices: Record<string, Device>,
+      newDevices: Record<string, Device>,
+      path: string = "",
+    ) {
+      const allDeviceIds = new Set([
+        ...Object.keys(oldDevices),
+        ...Object.keys(newDevices),
+      ]);
+
+      for (const deviceId of allDeviceIds) {
+        if (seenDeviceIds.includes(deviceId)) {
+          throw new Error(
+            "Duplicate device id found. Please make sure all device ids are unique",
+          );
+        }
+
+        seenDeviceIds.push(deviceId);
+
+        const oldDevice = oldDevices[deviceId];
+        const newDevice = newDevices[deviceId];
+
+        if (oldDevice == null) {
+          changedDevices.push({
+            type: "add",
+            device: newDevice,
+            path: `${path}/${newDevice.id}`,
+          });
+
+          collectChangedDevices(
+            {},
+            newDevice.childDevices,
+            `${path}/${newDevice.id}`,
+          );
+
+          continue;
+        }
+
+        if (newDevice == null) {
+          changedDevices.push({
+            type: "remove",
+            device: oldDevice,
+            path: `${path}/${oldDevice.id}`,
+          });
+
+          collectChangedDevices(
+            oldDevice.childDevices,
+            {},
+            `${path}/${oldDevice.id}`,
+          );
+
+          continue;
+        }
+
+        if (oldDevice !== newDevice) {
+          changedDevices.push({
+            type: "update",
+            device: newDevice,
+            path: `${path}/${newDevice.id}`,
+          });
+
+          collectChangedDevices(
+            newDevice.childDevices,
+            oldDevice.childDevices,
+            `${path}/${newDevice.id}`,
+          );
+        }
+      }
+
+      return changedDevices;
+    }
+
+    collectChangedDevices(
+      container.rootDevices,
+      newChildren,
+    );
+
+    for (const change of changedDevices) {
+      if (change.type === "remove") {
+        continue;
+      }
+
+      container.mqtt.publish(`${change.device.id}/$state`, "init", 2, true);
+    }
+
+    for (const change of changedDevices.toReversed()) {
+      if (change.type === "remove") {
+        // TODO: Clear value topics
+        container.mqtt.publish(`${change.device.id}/$state`, "", 2, true);
+        container.mqtt.publish(`${change.device.id}/$description`, "", 2, true);
+
+        continue;
+      }
+
+      container.mqtt.publish(
+        `${change.device.id}/$description`,
+        JSON.stringify(change.device),
+        2,
+        true,
+      );
+      container.mqtt.publish(`${change.device.id}/$state`, "ready", 2, true);
+    }
+
     container.rootDevices = newChildren;
   },
 });
@@ -179,7 +292,7 @@ export function register(
   mqtt: MqttAdapter,
 ) {
   const container = reconciler.createContainer(
-    { rootDevices: [], mqtt },
+    { rootDevices: {}, mqtt },
     0,
     null,
     true,
@@ -188,6 +301,8 @@ export function register(
     () => {},
     null,
   );
+
+  mqtt.connect("ws://localhost:8080");
 
   reconciler.updateContainer(whatToRender, container, null, null);
 

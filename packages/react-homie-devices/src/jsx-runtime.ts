@@ -1,6 +1,6 @@
 import type { Property } from "@nstadigs/homie-spec";
 
-// TODO: We can probably create some simple transform instead of
+// TODO: We can probably create some simple runtime instead of
 // importing from react.
 export { Fragment, jsx, jsxs } from "react/jsx-runtime";
 

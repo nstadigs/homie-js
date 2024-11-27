@@ -11,37 +11,59 @@ Deno.test("mod", async () => {
       const timeoutId = setTimeout(() => {
         console.log("-------------------------- timeout");
         setSomeValue(someValue + 1);
-      }, 1000);
+      }, 1);
 
       return () => {
         clearTimeout(timeoutId);
       };
-    });
+    }, []);
 
     return (
       <>
         <Device id="root-device">
-          <Device id={`child-device-${someValue}`}>
-            <Device id="third-level-device" />
+          <Device id={`child-device-${someValue}`} name={`name-${someValue}`}>
             {someValue !== 1 && <Node id="some-other-node1" />}
             {someValue === 1 && <Node id="some-other-node2" />}
           </Device>
-          <Node id="some-node" type="my-node">
-            <Property id="some-property" datatype="string" />
-            <Property id="some-other-property" datatype="integer" />
-          </Node>
         </Device>
-        <Device id="another-root-device" />
       </>
     );
+
+    // return (
+    //   <>
+    //     <Device id="root-device">
+    //       <Device id={`child-device-${someValue}`}>
+    //         <Device id="third-level-device" />
+    //         {someValue !== 1 && <Node id="some-other-node1" />}
+    //         {someValue === 1 && <Node id="some-other-node2" />}
+    //       </Device>
+    //       <Node id="some-node" type="my-node">
+    //         <Property id="some-property" datatype="string" />
+    //         <Property
+    //           id="some-other-property"
+    //           datatype="integer"
+    //           format="1:2:2"
+    //         />
+    //       </Node>
+    //     </Device>
+    //     <Device id="another-root-device" />
+    //   </>
+    // );
   }
+
+  const mqtt = new TestMqttAdapter();
+
+  mqtt.subscribe("#");
+  mqtt.onMessage((topic, payload) => {
+    console.log("Sent message", topic, payload);
+  });
 
   const cleanUp = register(
     <Controller />,
-    new TestMqttAdapter(),
+    mqtt,
   );
 
-  await new Promise((resolve) => setTimeout(resolve, 2000));
+  await new Promise((resolve) => setTimeout(resolve, 1000));
 
   console.log("----------------------- Unregistering");
 
@@ -67,12 +89,10 @@ export class TestMqttAdapter implements MqttAdapter {
   }
 
   connect() {
-    console.log("Connecting to MQTT broker");
     return Promise.resolve();
   }
 
   disconnect() {
-    console.log("Disconnecting from MQTT broker");
     return Promise.resolve();
   }
 
