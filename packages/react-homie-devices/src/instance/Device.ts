@@ -8,10 +8,13 @@ export class Device implements Instance {
   id: string;
   type?: "string";
   name?: string;
+  extensions?: string[];
+
   childDevices: Record<string, Device>;
   nodes: Record<string, Node>;
   parentId?: string;
   rootId?: string;
+  version: number;
 
   constructor(
     props: JSX.DeviceElementProps,
@@ -22,6 +25,7 @@ export class Device implements Instance {
     this.name = props.name;
     this.childDevices = childDevices ?? {};
     this.nodes = nodes ?? {};
+    this.version = Date.now();
   }
 
   addChild(child: Instance) {
@@ -52,8 +56,23 @@ export class Device implements Instance {
     );
   }
 
-  // Json representation of the device description according to the homie convention
+  // JSON representation of the device description according to the homie convention
   toJSON() {
-    return {};
+    return {
+      homie: "5.0",
+      version: this.version,
+      name: this.name,
+      type: this.type,
+      root: this.rootId,
+      parent: this.parentId,
+      extensions: this.extensions,
+      devices: Object.keys(this.childDevices),
+      nodes: Object.fromEntries(
+        Object.entries(this.nodes).map(([id, node]) => [
+          id,
+          node.toJSON(),
+        ]),
+      ),
+    };
   }
 }
