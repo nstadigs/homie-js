@@ -10,6 +10,11 @@ import type React from "react";
 import { createInstance, type Instance } from "./instance/Instance.ts";
 import { shallowEqual } from "./utils.ts";
 import { Device } from "./instance/Device.ts";
+import type {
+  DeviceElementProps,
+  NodeElementProps,
+  PropertyElementProps,
+} from "./jsx-runtime.ts";
 
 type Container = {
   rootDevices: Device[];
@@ -17,9 +22,9 @@ type Container = {
 };
 
 type Element =
-  | { type: "device$"; props: JSX.DeviceElementProps }
-  | { type: "node$"; props: JSX.NodeElementProps }
-  | { type: "property$"; props: JSX.PropertyElementProps };
+  | { type: "device$"; props: DeviceElementProps }
+  | { type: "node$"; props: NodeElementProps }
+  | { type: "property$"; props: PropertyElementProps };
 
 const reconciler = ReactReconciler<
   Element["type"],

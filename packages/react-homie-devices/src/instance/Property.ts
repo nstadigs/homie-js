@@ -1,3 +1,4 @@
+import type { PropertyElementProps } from "../jsx-runtime.ts";
 import type { Instance } from "./Instance.ts";
 
 export class Property implements Instance {
@@ -10,7 +11,7 @@ export class Property implements Instance {
   retained?: boolean;
   settable?: boolean;
 
-  constructor(props: JSX.PropertyElementProps) {
+  constructor(props: PropertyElementProps) {
     this.id = props.id;
     this.name = props.name;
     this.datatype = props.datatype;
@@ -23,7 +24,7 @@ export class Property implements Instance {
     throw new Error("Properties cannot have children");
   }
 
-  cloneWithProps(props: JSX.PropertyElementProps) {
+  cloneWithProps(props: PropertyElementProps) {
     return new Property(props);
   }
 

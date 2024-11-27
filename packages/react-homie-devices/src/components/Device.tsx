@@ -1,5 +1,7 @@
+import { DeviceElementProps } from "../jsx-runtime.ts";
+
 export function Device(
-  props: JSX.DeviceElementProps,
+  props: DeviceElementProps,
 ) {
   // create a custom jsx element
   return <device$ {...props} />;

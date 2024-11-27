@@ -1,3 +1,8 @@
+import type {
+  DeviceElementProps,
+  NodeElementProps,
+  PropertyElementProps,
+} from "../jsx-runtime.ts";
 import { Device } from "./Device.ts";
 import { Node } from "./Node.ts";
 import { Property } from "./Property.ts";
@@ -23,11 +28,11 @@ export function createInstance<
   switch (type) {
     // FIXME: Properly infer TProps
     case "device$":
-      return new Device(props as JSX.DeviceElementProps);
+      return new Device(props as DeviceElementProps);
     case "node$":
-      return new Node(props as JSX.NodeElementProps);
+      return new Node(props as NodeElementProps);
     case "property$":
-      return new Property(props as JSX.PropertyElementProps);
+      return new Property(props as PropertyElementProps);
   }
 
   throw new Error(

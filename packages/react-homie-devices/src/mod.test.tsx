@@ -1,7 +1,7 @@
 import React from "react";
 import { register } from "./mod.ts";
 import type { MqttAdapter, OnMessageCallback } from "@nstadigs/homie-devices";
-import { Device, Enum, Node, Property } from "./components.tsx";
+import { Device, Node, Property } from "./mod.ts";
 
 Deno.test("mod", async () => {
   function Controller() {
@@ -27,8 +27,8 @@ Deno.test("mod", async () => {
             {someValue === 1 && <Node id="some-other-node2" />}
           </Device>
           <Node id="some-node">
-            <Property id="some-property" datatype="test" />
-            <Property id="some-other-property" datatype="" />
+            <Property id="some-property" datatype="string" />
+            <Property id="some-other-property" datatype="integer" />
           </Node>
         </Device>
         <Device id="another-root-device" />

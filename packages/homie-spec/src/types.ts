@@ -99,7 +99,7 @@ export type NodeAttributes = {
 
 export type PropertyBase = {
   /** Friendly name of the Property. Defaults to the ID of the property. */
-  name: string;
+  name?: string;
 
   /** The data type. */
   datatype: string;

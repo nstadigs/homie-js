@@ -1,3 +1,4 @@
+import type { NodeElementProps } from "../jsx-runtime.ts";
 import type { Instance } from "./Instance.ts";
 import { Property } from "./Property.ts";
 
@@ -10,7 +11,7 @@ export class Node implements Instance {
   properties: Record<string, Property>;
 
   constructor(
-    props: JSX.NodeElementProps,
+    props: NodeElementProps,
     properties?: Record<string, Property>,
   ) {
     this.id = props.id;
@@ -27,7 +28,7 @@ export class Node implements Instance {
     this.properties[child.id] = child;
   }
 
-  cloneWithProps(props: JSX.NodeElementProps, keepChildren: boolean) {
+  cloneWithProps(props: NodeElementProps, keepChildren: boolean) {
     return new Node(props, keepChildren ? this.properties : {});
   }
 

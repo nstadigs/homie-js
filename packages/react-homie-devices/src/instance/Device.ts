@@ -1,4 +1,4 @@
-import type { JSX } from "../jsx.d.ts";
+import type { DeviceElementProps } from "../jsx-runtime.ts";
 import type { Instance } from "./Instance.ts";
 import { Node } from "./Node.ts";
 
@@ -17,7 +17,7 @@ export class Device implements Instance {
   version: number;
 
   constructor(
-    props: JSX.DeviceElementProps,
+    props: DeviceElementProps,
     childDevices?: Record<string, Device>,
     nodes?: Record<string, Node>,
   ) {
@@ -48,7 +48,7 @@ export class Device implements Instance {
     this.rootId = parent.rootId ?? parent.id;
   }
 
-  cloneWithProps(props: JSX.DeviceElementProps, keepChildren: boolean) {
+  cloneWithProps(props: DeviceElementProps, keepChildren: boolean) {
     return new Device(
       props,
       keepChildren ? this.childDevices : {},
