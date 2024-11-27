@@ -31,7 +31,7 @@ export class Device implements Instance {
   addChild(child: Instance) {
     if (child instanceof Device) {
       this.childDevices[child.id] = child;
-      child.setParent(this);
+      child._setParent(this);
       return;
     }
 
@@ -43,7 +43,7 @@ export class Device implements Instance {
     throw new Error("Only devices and nodes can be added to a device");
   }
 
-  setParent(parent: Device) {
+  _setParent(parent: Device) {
     this.parentId = parent.id;
     this.rootId = parent.rootId ?? parent.id;
   }
@@ -58,6 +58,13 @@ export class Device implements Instance {
 
   // JSON representation of the device description according to the homie convention
   toJSON() {
+    const nodeEntries = Object.entries(this.nodes).map(([id, node]) => [
+      id,
+      node.toJSON(),
+    ]);
+
+    const deviceIds = Object.keys(this.childDevices);
+
     return {
       homie: "5.0",
       version: this.version,
@@ -66,13 +73,10 @@ export class Device implements Instance {
       root: this.rootId,
       parent: this.parentId,
       extensions: this.extensions,
-      devices: Object.keys(this.childDevices),
-      nodes: Object.fromEntries(
-        Object.entries(this.nodes).map(([id, node]) => [
-          id,
-          node.toJSON(),
-        ]),
-      ),
+      devices: deviceIds.length > 0 ? deviceIds : undefined,
+      nodes: nodeEntries.length > 0
+        ? Object.fromEntries(nodeEntries)
+        : undefined,
     };
   }
 }

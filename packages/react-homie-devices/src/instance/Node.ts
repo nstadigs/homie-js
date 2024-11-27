@@ -33,13 +33,18 @@ export class Node implements Instance {
   }
 
   toJSON() {
+    const propertyEntries = Object.entries(this.properties).map(
+      ([id, property]) => [id, property.toJSON()],
+    );
+
     return {
-      properties: Object.fromEntries(
-        Object.entries(this.properties).map(([id, property]) => [
-          id,
-          property.toJSON(),
-        ]),
-      ),
+      name: this.name,
+      type: this.type,
+      properties: propertyEntries.length > 0
+        ? Object.fromEntries(
+          propertyEntries,
+        )
+        : undefined,
     };
   }
 }

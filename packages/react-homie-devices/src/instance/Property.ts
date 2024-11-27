@@ -29,6 +29,12 @@ export class Property implements Instance {
   }
 
   toJSON() {
-    return {};
+    return {
+      name: this.name,
+      datatype: this.datatype,
+      format: this.format,
+      retained: this.retained,
+      settable: this.settable,
+    };
   }
 }

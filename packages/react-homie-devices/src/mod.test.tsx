@@ -26,7 +26,7 @@ Deno.test("mod", async () => {
             {someValue !== 1 && <Node id="some-other-node1" />}
             {someValue === 1 && <Node id="some-other-node2" />}
           </Device>
-          <Node id="some-node">
+          <Node id="some-node" type="my-node">
             <Property id="some-property" datatype="string" />
             <Property id="some-other-property" datatype="integer" />
           </Node>
