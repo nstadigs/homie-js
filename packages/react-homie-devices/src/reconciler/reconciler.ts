@@ -7,14 +7,14 @@ import type { MqttAdapter } from "@nstadigs/homie-devices";
 // @deno-types="npm:@types/react"
 import type React from "react";
 
-import { createInstance, type Instance } from "./instance/Instance.ts";
-import { shallowEqual } from "./utils.ts";
-import { Device } from "./instance/Device.ts";
+import { createInstance, type Instance } from "./Instance.ts";
+import { shallowEqual } from "../utils.ts";
+import { Device } from "./Device.ts";
 import type {
   DeviceElementProps,
   NodeElementProps,
   PropertyElementProps,
-} from "./jsx-runtime.ts";
+} from "../jsx-runtime.ts";
 
 type Container = {
   rootDevices: Record<string, Device>;
@@ -89,8 +89,9 @@ const reconciler = ReactReconciler<
     return false;
   },
 
-  prepareUpdate() {
-    return null;
+  prepareUpdate(instance, type, oldProps, newProps) {
+    // Better to do diffing in here maybe?
+    return newProps;
   },
 
   shouldSetTextContent() {
@@ -178,12 +179,10 @@ const reconciler = ReactReconciler<
 
     const changedDevices: Change[] = [];
 
-    // console.log("newChildren", newChildren);
-
-    function collectChangedDevices(
+    function collectDeviceChanges(
       oldDevices: Record<string, Device>,
       newDevices: Record<string, Device>,
-      path: string = "",
+      _path: string = "",
     ) {
       const allDeviceIds = new Set([
         ...Object.keys(oldDevices),
@@ -206,13 +205,13 @@ const reconciler = ReactReconciler<
           changedDevices.push({
             type: "add",
             device: newDevice,
-            path: `${path}/${newDevice.id}`,
+            path: `${_path}/${newDevice.id}`,
           });
 
-          collectChangedDevices(
+          collectDeviceChanges(
             {},
             newDevice.childDevices,
-            `${path}/${newDevice.id}`,
+            `${_path}/${newDevice.id}`,
           );
 
           continue;
@@ -222,13 +221,13 @@ const reconciler = ReactReconciler<
           changedDevices.push({
             type: "remove",
             device: oldDevice,
-            path: `${path}/${oldDevice.id}`,
+            path: `${_path}/${oldDevice.id}`,
           });
 
-          collectChangedDevices(
+          collectDeviceChanges(
             oldDevice.childDevices,
             {},
-            `${path}/${oldDevice.id}`,
+            `${_path}/${oldDevice.id}`,
           );
 
           continue;
@@ -238,13 +237,13 @@ const reconciler = ReactReconciler<
           changedDevices.push({
             type: "update",
             device: newDevice,
-            path: `${path}/${newDevice.id}`,
+            path: `${_path}/${newDevice.id}`,
           });
 
-          collectChangedDevices(
-            newDevice.childDevices,
+          collectDeviceChanges(
             oldDevice.childDevices,
-            `${path}/${newDevice.id}`,
+            newDevice.childDevices,
+            `${_path}/${newDevice.id}`,
           );
         }
       }
@@ -252,7 +251,7 @@ const reconciler = ReactReconciler<
       return changedDevices;
     }
 
-    collectChangedDevices(
+    collectDeviceChanges(
       container.rootDevices,
       newChildren,
     );
@@ -276,10 +275,11 @@ const reconciler = ReactReconciler<
 
       container.mqtt.publish(
         `${change.device.id}/$description`,
-        JSON.stringify(change.device),
+        JSON.stringify(change.device, null, 2),
         2,
         true,
       );
+
       container.mqtt.publish(`${change.device.id}/$state`, "ready", 2, true);
     }
 
@@ -311,8 +311,4 @@ export function register(
     reconciler.flushPassiveEffects();
     reconciler.flushSync();
   };
-}
-
-function generateDeviceDescription(device: Device) {
-  return JSON.stringify(device);
 }

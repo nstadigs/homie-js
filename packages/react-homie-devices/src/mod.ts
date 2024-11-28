@@ -1,2 +1,2 @@
-export { register } from "./reconciler.ts";
+export { register } from "./reconciler/reconciler.ts";
 export * from "./components/mod.ts";

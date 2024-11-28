@@ -22,7 +22,7 @@ export class Device implements Instance {
     nodes?: Record<string, Node>,
   ) {
     this.id = props.id;
-    this.name = props.name;
+    this.name = props.name ?? this.id;
     this.childDevices = childDevices ?? {};
     this.nodes = nodes ?? {};
     this.version = Date.now();
@@ -46,6 +46,10 @@ export class Device implements Instance {
   _setParent(parent: Device) {
     this.parentId = parent.id;
     this.rootId = parent.rootId ?? parent.id;
+
+    // Parent device isn't added to its parent yet.
+    // We need to propagate the rootId down the tree from the root device
+    Object.values(this.childDevices).forEach((child) => child._setParent(this));
   }
 
   cloneWithProps(props: DeviceElementProps, keepChildren: boolean) {
@@ -63,8 +67,6 @@ export class Device implements Instance {
       node.toJSON(),
     ]);
 
-    const deviceIds = Object.keys(this.childDevices);
-
     return {
       homie: "5.0",
       version: this.version,
@@ -73,10 +75,8 @@ export class Device implements Instance {
       root: this.rootId,
       parent: this.parentId,
       extensions: this.extensions,
-      devices: deviceIds.length > 0 ? deviceIds : undefined,
-      nodes: nodeEntries.length > 0
-        ? Object.fromEntries(nodeEntries)
-        : undefined,
+      children: Object.keys(this.childDevices),
+      nodes: Object.fromEntries(nodeEntries),
     };
   }
 }

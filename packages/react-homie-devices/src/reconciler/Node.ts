@@ -15,7 +15,7 @@ export class Node implements Instance {
     properties?: Record<string, Property>,
   ) {
     this.id = props.id;
-    this.name = props.name;
+    this.name = props.name ?? this.id;
     this.type = props.type;
     this.properties = properties ?? {};
   }

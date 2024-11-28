@@ -22,9 +22,18 @@ Deno.test("mod", async () => {
       <>
         <Device id="root-device">
           <Device id={`child-device-${someValue}`} name={`name-${someValue}`}>
-            {someValue !== 1 && <Node id="some-other-node1" />}
+            <Device id="third-level-device" />
+
+            {someValue !== 1 && (
+              <Node id="some-other-node1">
+                <Property id="some-property" datatype="string" />
+              </Node>
+            )}
             {someValue === 1 && <Node id="some-other-node2" />}
+            <Node id="some-node" type={`my-node-${someValue}`} />
+            <Node id="static-node" type={`my-node-static`} />
           </Device>
+          <Device id="another-child-device" />
         </Device>
       </>
     );

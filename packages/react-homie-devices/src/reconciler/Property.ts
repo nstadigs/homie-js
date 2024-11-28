@@ -13,7 +13,7 @@ export class Property implements Instance {
 
   constructor(props: PropertyElementProps) {
     this.id = props.id;
-    this.name = props.name;
+    this.name = props.name ?? this.id;
     this.datatype = props.datatype;
     this.format = props.format;
     this.retained = props.retained;
