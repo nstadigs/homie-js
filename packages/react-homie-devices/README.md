@@ -63,7 +63,7 @@ function TV({id, name, isPaired, setPaired}) {
 start(<Controller />, new MqttAdapter({url: 'mqtt://localhost:1883'}));
 ```
 
-TODO:
+### TODO:
 
 - [x] Send states on first render
 - [x] Send descriptions on first render
