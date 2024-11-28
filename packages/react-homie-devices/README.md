@@ -16,6 +16,7 @@ this (very simplified):
 ```tsx
 import * as React from 'react';
 import { start, Device, Property, Node } from '@nstadigs/react-homie-devices';
+import { MqttAdapter } from '@nstadigs/homie-mqttjs-adapter';
 
 function Controller() {
   const [tvs, setTvs] = useState([]);
@@ -58,4 +59,19 @@ function TV({id, name, isPaired, setPaired}) {
     </Device>
   )
 }
+
+start(<Controller />, new MqttAdapter({url: 'mqtt://localhost:1883'}));
 ```
+
+TODO:
+
+- [x] Send states on first render
+- [x] Send descriptions on first render
+- [x] Send states and descriptions on updates
+- [x] Send states and descriptions on removals
+- [x] Child devices (root, parent, children)
+- [ ] Set and send property values
+- [ ] Set and send property $target values
+- [ ] Handle set commands
+- [ ] Last will
+- [ ] and probably a lot more...
