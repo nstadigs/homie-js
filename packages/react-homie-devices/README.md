@@ -14,9 +14,15 @@ A Device to control LG Tvs on your network could be implemented something like
 this (very simplified):
 
 ```tsx
-import * as React from 'react';
-import { start, Device, Property, Node } from '@nstadigs/react-homie-devices';
-import { MqttAdapter } from '@nstadigs/homie-mqttjs-adapter';
+import * as React from "react";
+import {
+  Device,
+  Enum,
+  Integer,
+  Node,
+  start,
+} from "@nstadigs/react-homie-devices";
+import { MqttAdapter } from "@nstadigs/homie-mqttjs-adapter";
 
 function Controller() {
   const [tvs, setTvs] = useState([]);
@@ -29,38 +35,66 @@ function Controller() {
   return (
     <Device id="lgtv-controller">
       <Node id="actions">
-        <Property id="search-for-devices" settable onSet={searchForLgtvDevices} />
+        <Property
+          id="search-for-devices"
+          settable
+          onSet={searchForLgtvDevices}
+        />
       </Node>
-      {tvs.map(({id, name}) => (
-        <TV id={id} name={name} />
-      ))}
+      {tvs.map(({ id, name }) => <TV id={id} name={name} />)}
     </Device>
   );
 }
 
-function TV({id, name, isPaired, setPaired}) {
+function TV({ id, name, isPaired, setPaired }) {
   const handlePairCommand = async () => {
     await callSomeApiToPairTheTv();
-    setPaired()
-  }
+    setPaired();
+  };
 
   return (
     <Device id={id} name={name}>
-      {!isPaired && (
-        <Node id="pairing">
-          <Property id="pair" settable onSet={} />
-        </Node>
-      )}
-      <Node id="audio" name="Audio controls">
-        <Property id="volume" retained settable value={0} onSet={(newVolume) => {
-          // Call lgtv api to set volume
-        }} />
+      <Node id="pairing">
+        <Enum
+          id="commands"
+          settable
+          options={["pair"]}
+          onSet={(value) => {
+            if (value === "pair") {
+              handlePairCommand();
+            }
+          }}
+        />
+        <Enum
+          id="status"
+          retained
+          options={["not-paired", "pairing", "paired"]}
+          value="not-paired"
+        />
       </Node>
+      {isPaired && (
+        <>
+          <Node id="audio" name="Audio controls">
+            <Integer
+              id="volume"
+              retained
+              settable
+              value={0}
+              min={0}
+              max={100}
+              step={1}
+              onSet={(newVolume) => {
+                // Call lgtv api to set volume
+              }}
+            />
+          </Node>
+        </>
+      )}
     </Device>
-  )
+  );
 }
 
-start(<Controller />, new MqttAdapter({url: 'mqtt://localhost:1883'}));
+start(<Controller />, new MqttAdapter({ url: "mqtt://localhost:1883" }));
 ```
 
 ### TODO:
@@ -72,6 +106,7 @@ start(<Controller />, new MqttAdapter({url: 'mqtt://localhost:1883'}));
 - [x] Child devices (root, parent, children)
 - [ ] Set and send property values
 - [ ] Set and send property $target values
+- [ ] Validation (see @nstadigs/homie-spec)
 - [ ] Handle set commands
 - [ ] Last will
 - [ ] and probably a lot more...
