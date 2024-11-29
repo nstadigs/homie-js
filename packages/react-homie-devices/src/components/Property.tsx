@@ -1,4 +1,4 @@
-import { PropertyElementProps } from "../jsx-runtime.ts";
+import type { PropertyElementProps } from "../jsx-runtime.ts";
 
 export function Property(
   props: PropertyElementProps,

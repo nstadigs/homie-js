@@ -9,15 +9,22 @@ export class Property implements Instance {
   name?: string;
   format?: string;
   retained?: boolean;
-  settable?: boolean;
 
-  constructor(props: PropertyElementProps) {
+  // This object is shared between all clones of an instance
+  shared?: {
+    onSet?: (value: unknown) => void;
+  };
+
+  constructor(props: PropertyElementProps, _shared?: typeof this.shared) {
     this.id = props.id;
     this.name = props.name ?? this.id;
     this.datatype = props.datatype;
     this.format = props.format;
     this.retained = props.retained;
-    this.settable = props.settable;
+
+    this.shared = _shared ?? {
+      onSet: props.onSet,
+    };
   }
 
   addChild() {
@@ -25,7 +32,7 @@ export class Property implements Instance {
   }
 
   cloneWithProps(props: PropertyElementProps) {
-    return new Property(props);
+    return new Property(props, this.shared);
   }
 
   toJSON() {
@@ -34,7 +41,7 @@ export class Property implements Instance {
       datatype: this.datatype,
       format: this.format,
       retained: this.retained,
-      settable: this.settable,
+      settable: this.shared?.onSet !== undefined,
     };
   }
 }

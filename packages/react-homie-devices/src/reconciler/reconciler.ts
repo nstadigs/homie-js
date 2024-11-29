@@ -60,17 +60,14 @@ const reconciler = ReactReconciler<
 
   cloneInstance(
     instance,
-    _updatePayload,
-    type,
-    oldProps,
+    updatePayload,
+    _type,
+    _oldProps,
     newProps,
     __DEV__internalInstanceHandle,
     keepChildren,
   ) {
-    const [isShallowEqual] = shallowEqual(oldProps, newProps);
-    const typeIsEqual = `${instance.instanceType}$` === type;
-
-    if (typeIsEqual && isShallowEqual) {
+    if (updatePayload == null && keepChildren) {
       return instance;
     }
 
@@ -89,8 +86,32 @@ const reconciler = ReactReconciler<
     return false;
   },
 
-  prepareUpdate(instance, type, oldProps, newProps) {
-    // Better to do diffing in here maybe?
+  prepareUpdate(
+    instance,
+    type,
+    oldProps: Record<
+      string,
+      unknown
+    >,
+    newProps: Record<
+      string,
+      unknown
+    >,
+  ) {
+    const { children: _throwAway0, ...oldPropsWoChildren } = oldProps;
+    const { children: _throwAway1, ...newPropsWoChildren } = newProps;
+
+    const [isShallowEqual] = shallowEqual(
+      oldPropsWoChildren,
+      newPropsWoChildren,
+    );
+
+    const typeIsEqual = `${instance.instanceType}$` === type;
+
+    if (typeIsEqual && isShallowEqual) {
+      return null;
+    }
+
     return newProps;
   },
 
@@ -171,13 +192,13 @@ const reconciler = ReactReconciler<
   replaceContainerChildren(container, newChildren: Record<string, Device>) {
     const seenDeviceIds: string[] = [];
 
-    type Change = {
+    type DeviceChange = {
       type: "add" | "remove" | "update";
       device: Device;
       path: string;
     };
 
-    const changedDevices: Change[] = [];
+    const changedDevices: DeviceChange[] = [];
 
     function collectDeviceChanges(
       oldDevices: Record<string, Device>,
@@ -261,26 +282,45 @@ const reconciler = ReactReconciler<
         continue;
       }
 
-      container.mqtt.publish(`${change.device.id}/$state`, "init", 2, true);
+      container.mqtt.publish(
+        `homie/5/${change.device.id}/$state`,
+        "init",
+        2,
+        true,
+      );
     }
 
     for (const change of changedDevices.toReversed()) {
       if (change.type === "remove") {
-        // TODO: Clear value topics
-        container.mqtt.publish(`${change.device.id}/$state`, "", 2, true);
-        container.mqtt.publish(`${change.device.id}/$description`, "", 2, true);
+        container.mqtt.publish(
+          `homie/5/${change.device.id}/$state`,
+          "",
+          2,
+          true,
+        );
+        container.mqtt.publish(
+          `homie/5/${change.device.id}/$description`,
+          "",
+          2,
+          true,
+        );
 
         continue;
       }
 
       container.mqtt.publish(
-        `${change.device.id}/$description`,
+        `homie/5/${change.device.id}/$description`,
         JSON.stringify(change.device, null, 2),
         2,
         true,
       );
 
-      container.mqtt.publish(`${change.device.id}/$state`, "ready", 2, true);
+      container.mqtt.publish(
+        `homie/5/${change.device.id}/$state`,
+        "ready",
+        2,
+        true,
+      );
     }
 
     container.rootDevices = newChildren;

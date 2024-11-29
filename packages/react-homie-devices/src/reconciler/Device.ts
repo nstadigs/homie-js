@@ -31,7 +31,7 @@ export class Device implements Instance {
   addChild(child: Instance) {
     if (child instanceof Device) {
       this.childDevices[child.id] = child;
-      child._setParent(this);
+      child._recursivelySetParent(this);
       return;
     }
 
@@ -43,13 +43,15 @@ export class Device implements Instance {
     throw new Error("Only devices and nodes can be added to a device");
   }
 
-  _setParent(parent: Device) {
+  // Parent device isn't added to its parent yet.
+  // We need to propagate the rootId down the tree from the root device
+  _recursivelySetParent(parent: Device) {
     this.parentId = parent.id;
     this.rootId = parent.rootId ?? parent.id;
 
-    // Parent device isn't added to its parent yet.
-    // We need to propagate the rootId down the tree from the root device
-    Object.values(this.childDevices).forEach((child) => child._setParent(this));
+    Object.values(this.childDevices).forEach((child) =>
+      child._recursivelySetParent(this)
+    );
   }
 
   cloneWithProps(props: DeviceElementProps, keepChildren: boolean) {

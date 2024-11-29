@@ -1,3 +1,4 @@
+// @deno-types="npm:@types/react"
 import React from "react";
 import { register } from "./mod.ts";
 import type { MqttAdapter, OnMessageCallback } from "@nstadigs/homie-devices";
@@ -19,45 +20,17 @@ Deno.test("mod", async () => {
     }, []);
 
     return (
-      <>
-        <Device id="root-device">
-          <Device id={`child-device-${someValue}`} name={`name-${someValue}`}>
-            <Device id="third-level-device" />
-
-            {someValue !== 1 && (
-              <Node id="some-other-node1">
-                <Property id="some-property" datatype="string" />
-              </Node>
-            )}
-            {someValue === 1 && <Node id="some-other-node2" />}
-            <Node id="some-node" type={`my-node-${someValue}`} />
-            <Node id="static-node" type={`my-node-static`} />
-          </Device>
-          <Device id="another-child-device" />
-        </Device>
-      </>
+      <Device id="root-device" name="Root device">
+        <Node id="root-device-node">
+          <Property
+            id="property-2"
+            name="Property 3"
+            datatype="integer"
+            retained={someValue % 2 === 0}
+          />
+        </Node>
+      </Device>
     );
-
-    // return (
-    //   <>
-    //     <Device id="root-device">
-    //       <Device id={`child-device-${someValue}`}>
-    //         <Device id="third-level-device" />
-    //         {someValue !== 1 && <Node id="some-other-node1" />}
-    //         {someValue === 1 && <Node id="some-other-node2" />}
-    //       </Device>
-    //       <Node id="some-node" type="my-node">
-    //         <Property id="some-property" datatype="string" />
-    //         <Property
-    //           id="some-other-property"
-    //           datatype="integer"
-    //           format="1:2:2"
-    //         />
-    //       </Node>
-    //     </Device>
-    //     <Device id="another-root-device" />
-    //   </>
-    // );
   }
 
   const mqtt = new TestMqttAdapter();
