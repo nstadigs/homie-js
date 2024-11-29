@@ -15,9 +15,11 @@ import type {
   NodeElementProps,
   PropertyElementProps,
 } from "../jsx-runtime.ts";
+import { Property } from "./Property.ts";
 
 type Container = {
   rootDevices: Record<string, Device>;
+  devicesById: Record<string, Device>;
   mqtt: MqttAdapter;
 };
 
@@ -60,6 +62,7 @@ const reconciler = ReactReconciler<
 
   cloneInstance(
     instance,
+    // New props if changed, otherwise null. Passed from prepareUpdate
     updatePayload,
     _type,
     _oldProps,
@@ -82,7 +85,26 @@ const reconciler = ReactReconciler<
     throw new Error("Text nodes are not supported");
   },
 
-  finalizeInitialChildren() {
+  finalizeInitialChildren(
+    // instance,
+    // _type,
+    // props,
+    // rootContainer,
+    // _hostContext,
+  ) {
+    // if (instance instanceof Property) {
+    //   console.log("Finalizing property", instance.id, instance.path);
+    // }
+    // if (instance instanceof Property && instance.path != null) {
+    //   const deviceProps = props as PropertyElementProps;
+
+    //   if ((props as PropertyElementProps).onSet == null) {
+    //     rootContainer.commandHandlersByPath[instance.path] = null;
+    //   } else {
+    //     rootContainer.commandHandlersByPath[instance.path] = deviceProps.onSet;
+    //   }
+    // }
+
     return false;
   },
 
@@ -119,8 +141,8 @@ const reconciler = ReactReconciler<
     return false;
   },
 
-  getRootHostContext(rootContext) {
-    return rootContext;
+  getRootHostContext() {
+    return null;
   },
 
   getChildHostContext(parentHostContext) {
@@ -190,7 +212,7 @@ const reconciler = ReactReconciler<
   },
 
   replaceContainerChildren(container, newChildren: Record<string, Device>) {
-    const seenDeviceIds: string[] = [];
+    const devicesById: Record<string, Device> = {};
 
     type DeviceChange = {
       type: "add" | "remove" | "update";
@@ -211,13 +233,13 @@ const reconciler = ReactReconciler<
       ]);
 
       for (const deviceId of allDeviceIds) {
-        if (seenDeviceIds.includes(deviceId)) {
+        if (devicesById[deviceId] != null) {
           throw new Error(
-            "Duplicate device id found. Please make sure all device ids are unique",
+            `Duplicate device id "${deviceId}" found. Please make sure all device ids are unique`,
           );
         }
 
-        seenDeviceIds.push(deviceId);
+        devicesById[deviceId] = newDevices[deviceId] ?? oldDevices[deviceId];
 
         const oldDevice = oldDevices[deviceId];
         const newDevice = newDevices[deviceId];
@@ -323,6 +345,7 @@ const reconciler = ReactReconciler<
       );
     }
 
+    container.devicesById = devicesById;
     container.rootDevices = newChildren;
   },
 });
@@ -331,8 +354,10 @@ export function register(
   whatToRender: React.ReactNode,
   mqtt: MqttAdapter,
 ) {
+  const context: Container = { rootDevices: {}, mqtt, devicesById: {} };
+
   const container = reconciler.createContainer(
-    { rootDevices: {}, mqtt },
+    context,
     0,
     null,
     true,
@@ -343,6 +368,24 @@ export function register(
   );
 
   mqtt.connect("ws://localhost:8080");
+
+  mqtt.onMessage((topic, payload) => {
+    const [_, homieVersion, deviceId, nodeId, propertyId, maybeSet] = topic
+      .split("/");
+
+    if (homieVersion === "5" && maybeSet !== "set") {
+      return;
+    }
+
+    const property = context.devicesById[deviceId]?.nodes[nodeId]
+      ?.properties[propertyId];
+
+    if (property.onSet == null) {
+      return;
+    }
+
+    property.onSet(JSON.parse(payload));
+  });
 
   reconciler.updateContainer(whatToRender, container, null, null);
 

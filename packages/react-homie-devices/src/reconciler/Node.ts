@@ -1,4 +1,5 @@
 import type { NodeElementProps } from "../jsx-runtime.ts";
+import type { Device } from "./Device.ts";
 import type { Instance } from "./Instance.ts";
 import { Property } from "./Property.ts";
 
@@ -8,6 +9,7 @@ export class Node implements Instance {
   id: string;
   name?: string;
   type?: string;
+  deviceId?: string;
   properties: Record<string, Property>;
 
   constructor(
@@ -26,6 +28,13 @@ export class Node implements Instance {
     }
 
     this.properties[child.id] = child;
+  }
+
+  setParent(device: Device) {
+    this.deviceId = device.id;
+    Object.values(this.properties).forEach((property) =>
+      property.setParent(this)
+    );
   }
 
   cloneWithProps(props: NodeElementProps, keepChildren: boolean) {

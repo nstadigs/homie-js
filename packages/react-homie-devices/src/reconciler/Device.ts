@@ -37,6 +37,7 @@ export class Device implements Instance {
 
     if (child instanceof Node) {
       this.nodes[child.id] = child;
+      child.setParent(this);
       return;
     }
 

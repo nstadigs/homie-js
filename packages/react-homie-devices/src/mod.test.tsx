@@ -8,17 +8,6 @@ Deno.test("mod", async () => {
   function Controller() {
     const [someValue, setSomeValue] = React.useState(0);
 
-    React.useEffect(() => {
-      const timeoutId = setTimeout(() => {
-        console.log("-------------------------- timeout");
-        setSomeValue(someValue + 1);
-      }, 1);
-
-      return () => {
-        clearTimeout(timeoutId);
-      };
-    }, []);
-
     return (
       <Device id="root-device" name="Root device">
         <Node id="root-device-node">
@@ -27,6 +16,10 @@ Deno.test("mod", async () => {
             name="Property 3"
             datatype="integer"
             retained={someValue % 2 === 0}
+            onSet={(addValue) => {
+              console.log("----------------------- Setting some value");
+              setSomeValue((value) => value + addValue);
+            }}
           />
         </Node>
       </Device>
@@ -35,7 +28,8 @@ Deno.test("mod", async () => {
 
   const mqtt = new TestMqttAdapter();
 
-  mqtt.subscribe("#");
+  mqtt.subscribe("+/5/#");
+
   mqtt.onMessage((topic, payload) => {
     console.log("Sent message", topic, payload);
   });
@@ -43,6 +37,15 @@ Deno.test("mod", async () => {
   const cleanUp = register(
     <Controller />,
     mqtt,
+  );
+
+  await new Promise((resolve) => setTimeout(resolve, 1));
+
+  mqtt.publish(
+    "homie/5/root-device/root-device-node/property-2/set",
+    "42",
+    0,
+    false,
   );
 
   await new Promise((resolve) => setTimeout(resolve, 1000));

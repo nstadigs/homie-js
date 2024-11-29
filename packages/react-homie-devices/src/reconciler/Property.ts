@@ -1,5 +1,6 @@
 import type { PropertyElementProps } from "../jsx-runtime.ts";
 import type { Instance } from "./Instance.ts";
+import { Node } from "./Node.ts";
 
 export class Property implements Instance {
   instanceType = "property" as const;
@@ -9,30 +10,29 @@ export class Property implements Instance {
   name?: string;
   format?: string;
   retained?: boolean;
+  path?: string;
 
-  // This object is shared between all clones of an instance
-  shared?: {
-    onSet?: (value: unknown) => void;
-  };
+  onSet?: (value: unknown) => void;
 
-  constructor(props: PropertyElementProps, _shared?: typeof this.shared) {
+  constructor(props: PropertyElementProps) {
     this.id = props.id;
     this.name = props.name ?? this.id;
     this.datatype = props.datatype;
     this.format = props.format;
     this.retained = props.retained;
-
-    this.shared = _shared ?? {
-      onSet: props.onSet,
-    };
+    this.onSet = props.onSet;
   }
 
   addChild() {
     throw new Error("Properties cannot have children");
   }
 
+  setParent(node: Node) {
+    this.path = `${node.deviceId}/${node.id}/${this.id}`;
+  }
+
   cloneWithProps(props: PropertyElementProps) {
-    return new Property(props, this.shared);
+    return new Property(props);
   }
 
   toJSON() {
@@ -41,7 +41,7 @@ export class Property implements Instance {
       datatype: this.datatype,
       format: this.format,
       retained: this.retained,
-      settable: this.shared?.onSet !== undefined,
+      settable: this.onSet !== undefined,
     };
   }
 }
