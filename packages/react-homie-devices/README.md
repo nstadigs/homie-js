@@ -107,6 +107,6 @@ start(<Controller />, new MqttAdapter({ url: "mqtt://localhost:1883" }));
 - [ ] Set and send property values
 - [ ] Set and send property $target values
 - [ ] Validation (see @nstadigs/homie-spec)
-- [ ] Handle set commands
+- [x] Handle set commands
 - [ ] Last will
 - [ ] and probably a lot more...
