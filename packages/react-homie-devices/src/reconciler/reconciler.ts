@@ -15,7 +15,8 @@ import type {
   NodeElementProps,
   PropertyElementProps,
 } from "../jsx-runtime.ts";
-import { Property } from "./Property.ts";
+
+import { validateValue } from "@nstadigs/homie-spec";
 
 type Container = {
   rootDevices: Record<string, Device>;
@@ -384,7 +385,16 @@ export function register(
       return;
     }
 
-    property.onSet(JSON.parse(payload));
+    const result = validateValue(
+      { format: property.format, datatype: property.datatype },
+      payload.toString(),
+    );
+
+    if (!result.valid) {
+      return;
+    }
+
+    property.onSet(result.value);
   });
 
   reconciler.updateContainer(whatToRender, container, null, null);

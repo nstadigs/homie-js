@@ -12,10 +12,19 @@ type FailResult = {
 
 type Result = SuccessResult | FailResult;
 
+export type ResultByDatatype = {
+  integer: IntegerResult;
+  float: FloatResult;
+  boolean: BooleanResult;
+  string: StringResult;
+  enum: EnumResult;
+  color: ColorResult;
+};
+
 export function validateValue(
   { format, datatype }: { format?: string; datatype: string },
   raw: string,
-): Result {
+) {
   switch (datatype) {
     case "integer":
       return validateInteger(raw, format);
@@ -38,7 +47,10 @@ export function validateValue(
   }
 }
 
-function validateInteger(raw: string, format?: string): Result {
+type IntegerSuccessResult = SuccessResult & { value: number };
+type IntegerResult = IntegerSuccessResult | FailResult;
+
+function validateInteger(raw: string, format?: string): IntegerResult {
   let value = parseInt(raw, 10);
 
   if (isNaN(value)) {
@@ -90,12 +102,15 @@ function validateInteger(raw: string, format?: string): Result {
 
   return {
     raw,
-    value: value.toString(),
+    value: value,
     valid: true,
   };
 }
 
-function validateFloat(raw: string, format?: string): Result {
+type FloatSuccessResult = SuccessResult & { value: number };
+type FloatResult = FloatSuccessResult | FailResult;
+
+function validateFloat(raw: string, _format?: string): FloatResult {
   const value = parseInt(raw, 10);
 
   if (isNaN(value)) {
@@ -108,12 +123,15 @@ function validateFloat(raw: string, format?: string): Result {
 
   return {
     raw,
-    value: value.toString(),
+    value,
     valid: true,
   };
 }
 
-function validateBoolean(raw: string, _?: string): Result {
+type BooleanSuccessResult = SuccessResult & { value: boolean };
+type BooleanResult = BooleanSuccessResult | FailResult;
+
+function validateBoolean(raw: string, _format?: string): BooleanResult {
   if (raw === "true" || raw === "false") {
     return {
       raw,
@@ -129,7 +147,10 @@ function validateBoolean(raw: string, _?: string): Result {
   };
 }
 
-function validateString(raw: string, format?: string): Result {
+type StringSuccessResult = SuccessResult & { value: string };
+type StringResult = StringSuccessResult | FailResult;
+
+function validateString(raw: string, _format?: string): StringResult {
   if (raw.length > 268_435_456) {
     return {
       raw,
@@ -146,7 +167,10 @@ function validateString(raw: string, format?: string): Result {
   };
 }
 
-function validateEnum(raw: string, format?: string): Result {
+type EnumSuccessResult = SuccessResult & { value: string };
+type EnumResult = EnumSuccessResult | FailResult;
+
+function validateEnum(raw: string, format?: string): EnumResult {
   if (format?.split(",").includes(raw)) {
     return {
       raw,
@@ -162,7 +186,10 @@ function validateEnum(raw: string, format?: string): Result {
   };
 }
 
-function validateColor(raw: string, format?: string): Result {
+type ColorSuccessResult = SuccessResult & { value: string };
+type ColorResult = ColorSuccessResult | FailResult;
+
+function validateColor(raw: string, _format?: string): ColorResult {
   const colorMatcher = /^#[0-9a-fA-F]{6}$/;
 
   if (colorMatcher.test(raw)) {

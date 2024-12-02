@@ -1,3 +1,11 @@
 export { Device } from "./Device.tsx";
 export { Node } from "./Node.tsx";
 export { Property } from "./Property.tsx";
+export * from "./Boolean.tsx";
+export * from "./Color.tsx";
+export * from "./Datetime.tsx";
+export * from "./Duration.tsx";
+export * from "./Enum.tsx";
+export * from "./Float.tsx";
+export * from "./Integer.tsx";
+export * from "./String.tsx";

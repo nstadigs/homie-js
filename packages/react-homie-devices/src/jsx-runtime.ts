@@ -21,11 +21,55 @@ export type NodeElementProps = {
   type?: string;
 };
 
-export type PropertyElementProps = Property & {
+type PropertyElementPropsBase = Property & {
   id: string;
   value?: unknown;
-  onSet?: (value: unknown) => void;
+  datatype: Property["datatype"];
 };
+
+type StringPropertyElementProps = PropertyElementPropsBase & {
+  datatype: "string";
+  value?: string;
+  onSet?: (value: string) => void;
+};
+
+export type IntegerPropertyElementProps = PropertyElementPropsBase & {
+  datatype: "integer";
+  value?: number;
+  onSet?: (value: number) => void;
+};
+
+export type FloatPropertyElementProps = PropertyElementPropsBase & {
+  datatype: "float";
+  value?: number;
+  onSet?: (value: number) => void;
+};
+
+export type BooleanPropertyElementProps = PropertyElementPropsBase & {
+  datatype: "boolean";
+  value?: boolean;
+  onSet?: (value: boolean) => void;
+};
+
+type EnumPropertyElementProps = PropertyElementPropsBase & {
+  datatype: "enum";
+  value?: string;
+  onSet?: (value: string) => void;
+};
+
+type ColorPropertyElementProps = PropertyElementPropsBase & {
+  datatype: "color";
+  value?: string;
+  onSet?: (value: string) => void;
+};
+
+export type PropertyElementProps =
+  | StringPropertyElementProps
+  | IntegerPropertyElementProps
+  | FloatPropertyElementProps
+  | BooleanPropertyElementProps
+  | EnumPropertyElementProps
+  | ColorPropertyElementProps;
 
 declare global {
   namespace JSX {

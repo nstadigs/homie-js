@@ -1,11 +1,6 @@
 import type { PropertyElementProps } from "../jsx-runtime.ts";
 
-/**
- * Lower level property component. Props mimics the spec
- *
- * @param props
- */
-export function Property(
+export function DateTime(
   props: PropertyElementProps,
 ) {
   return <property$ {...props} />;

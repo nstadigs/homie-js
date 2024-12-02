@@ -121,6 +121,11 @@ export type StringProperty = PropertyBase & {
   datatype: "string";
 };
 
+type NumberFormat = Exclude<
+  `${number | ""}:${number | ""}${`:${number}` | ""}`,
+  ":" | "::" | ":::"
+>;
+
 export type FloatProperty = PropertyBase & {
   datatype: "float";
 
@@ -138,7 +143,7 @@ export type FloatProperty = PropertyBase & {
    * outside the min/max range). The min/max validation must be done
    * after rounding.
    */
-  format?: `${number | ""}:${number | ""}${`:${number}` | ""}`;
+  format?: NumberFormat;
 };
 
 export type IntegerProperty = PropertyBase & {
@@ -158,7 +163,7 @@ export type IntegerProperty = PropertyBase & {
    * outside the min/max range). The min/max validation must be done
    * after rounding.
    */
-  format?: `${number | ""}:${number | ""}${`:${number}` | ""}`;
+  format?: NumberFormat;
 };
 
 export type EnumProperty = PropertyBase & {

@@ -1,6 +1,6 @@
 import type { PropertyElementProps } from "../jsx-runtime.ts";
 import type { Instance } from "./Instance.ts";
-import { Node } from "./Node.ts";
+import type { Node } from "./Node.ts";
 
 export class Property implements Instance {
   instanceType = "property" as const;
@@ -12,7 +12,7 @@ export class Property implements Instance {
   retained?: boolean;
   path?: string;
 
-  onSet?: (value: unknown) => void;
+  onSet?: PropertyElementProps["onSet"];
 
   constructor(props: PropertyElementProps) {
     this.id = props.id;
