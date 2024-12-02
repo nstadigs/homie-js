@@ -63,13 +63,34 @@ type ColorPropertyElementProps = PropertyElementPropsBase & {
   onSet?: (value: string) => void;
 };
 
+type DatetimePropertyElementProps = PropertyElementPropsBase & {
+  datatype: "datetime";
+  value?: string;
+  onSet?: (value: string) => void;
+};
+
+type DurationPropertyElementProps = PropertyElementPropsBase & {
+  datatype: "duration";
+  value?: string;
+  onSet?: (value: string) => void;
+};
+
+type JsonPropertyElementProps = PropertyElementPropsBase & {
+  datatype: "json";
+  value?: string;
+  onSet?: (value: string) => void;
+};
+
 export type PropertyElementProps =
   | StringPropertyElementProps
   | IntegerPropertyElementProps
   | FloatPropertyElementProps
   | BooleanPropertyElementProps
   | EnumPropertyElementProps
-  | ColorPropertyElementProps;
+  | ColorPropertyElementProps
+  | DatetimePropertyElementProps
+  | DurationPropertyElementProps
+  | JsonPropertyElementProps;
 
 declare global {
   namespace JSX {

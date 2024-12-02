@@ -1,7 +1,7 @@
 import type { PropertyElementProps } from "../jsx-runtime.ts";
 
-export function DateTime(
-  props: Extract<PropertyElementProps, { datatype: "datetime" }>,
+export function Json(
+  props: Extract<PropertyElementProps, { datatype: "json" }>,
 ) {
   return <property$ {...props} />;
 }

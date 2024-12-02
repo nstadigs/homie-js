@@ -1,7 +1,7 @@
 import type { PropertyElementProps } from "../jsx-runtime.ts";
 
 export function Boolean(
-  props: PropertyElementProps,
+  props: Extract<PropertyElementProps, { datatype: "boolean" }>,
 ) {
   return <property$ {...props} />;
 }

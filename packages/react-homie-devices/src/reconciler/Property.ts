@@ -12,7 +12,7 @@ export class Property implements Instance {
   retained?: boolean;
   path?: string;
 
-  onSet?: PropertyElementProps["onSet"];
+  onSet?: (value: any) => void;
 
   constructor(props: PropertyElementProps) {
     this.id = props.id;

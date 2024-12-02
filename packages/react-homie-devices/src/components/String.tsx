@@ -1,7 +1,7 @@
 import type { PropertyElementProps } from "../jsx-runtime.ts";
 
 export function String(
-  props: PropertyElementProps,
+  props: Extract<PropertyElementProps, { datatype: "string" }>,
 ) {
   return <property$ {...props} />;
 }

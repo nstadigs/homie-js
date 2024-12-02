@@ -377,24 +377,23 @@ export function register(
     if (homieVersion === "5" && maybeSet !== "set") {
       return;
     }
+    debugger;
 
     const property = context.devicesById[deviceId]?.nodes[nodeId]
       ?.properties[propertyId];
 
-    if (property.onSet == null) {
+    if (property == null || property.onSet == null) {
       return;
     }
 
     const result = validateValue(
-      { format: property.format, datatype: property.datatype },
+      property,
       payload.toString(),
     );
 
-    if (!result.valid) {
-      return;
+    if (result.valid) {
+      property.onSet(result.value);
     }
-
-    property.onSet(result.value);
   });
 
   reconciler.updateContainer(whatToRender, container, null, null);

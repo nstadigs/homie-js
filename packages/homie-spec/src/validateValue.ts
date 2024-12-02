@@ -1,18 +1,18 @@
-type SuccessResult = {
-  raw: string;
-  value: unknown;
+import type { Property } from "./types.ts";
+
+type SuccessResult<T> = {
   valid: true;
+  raw: string;
+  value: T;
 };
 
 type FailResult = {
-  raw: string;
   valid: false;
+  raw: string;
   message: string;
 };
 
-type Result = SuccessResult | FailResult;
-
-export type ResultByDatatype = {
+export type ValidateValueResultByDatatype = {
   integer: IntegerResult;
   float: FloatResult;
   boolean: BooleanResult;
@@ -22,7 +22,7 @@ export type ResultByDatatype = {
 };
 
 export function validateValue(
-  { format, datatype }: { format?: string; datatype: string },
+  { format, datatype }: { datatype: string; format?: string },
   raw: string,
 ) {
   switch (datatype) {
@@ -38,16 +38,22 @@ export function validateValue(
       return validateEnum(raw, format);
     case "color":
       return validateColor(raw, format);
+    case "datetime":
+      return validateDatetime(raw, format);
+    case "duration":
+      return validateDuration(raw, format);
+    case "json":
+      return validateJson(raw, format);
     default:
       return {
         raw,
         valid: false,
         message: `Datatype not supported: ${datatype}`,
-      };
+      } satisfies FailResult;
   }
 }
 
-type IntegerSuccessResult = SuccessResult & { value: number };
+type IntegerSuccessResult = SuccessResult<number>;
 type IntegerResult = IntegerSuccessResult | FailResult;
 
 function validateInteger(raw: string, format?: string): IntegerResult {
@@ -61,7 +67,7 @@ function validateInteger(raw: string, format?: string): IntegerResult {
     };
   }
 
-  if (format) {
+  if (format != null) {
     const [min, max, step] = format
       .split(":")
       .map((v: string) => parseInt(v, 10))
@@ -102,12 +108,12 @@ function validateInteger(raw: string, format?: string): IntegerResult {
 
   return {
     raw,
-    value: value,
+    value,
     valid: true,
   };
 }
 
-type FloatSuccessResult = SuccessResult & { value: number };
+type FloatSuccessResult = SuccessResult<number>;
 type FloatResult = FloatSuccessResult | FailResult;
 
 function validateFloat(raw: string, _format?: string): FloatResult {
@@ -128,7 +134,7 @@ function validateFloat(raw: string, _format?: string): FloatResult {
   };
 }
 
-type BooleanSuccessResult = SuccessResult & { value: boolean };
+type BooleanSuccessResult = SuccessResult<boolean>;
 type BooleanResult = BooleanSuccessResult | FailResult;
 
 function validateBoolean(raw: string, _format?: string): BooleanResult {
@@ -147,7 +153,7 @@ function validateBoolean(raw: string, _format?: string): BooleanResult {
   };
 }
 
-type StringSuccessResult = SuccessResult & { value: string };
+type StringSuccessResult = SuccessResult<string>;
 type StringResult = StringSuccessResult | FailResult;
 
 function validateString(raw: string, _format?: string): StringResult {
@@ -167,7 +173,7 @@ function validateString(raw: string, _format?: string): StringResult {
   };
 }
 
-type EnumSuccessResult = SuccessResult & { value: string };
+type EnumSuccessResult = SuccessResult<string>;
 type EnumResult = EnumSuccessResult | FailResult;
 
 function validateEnum(raw: string, format?: string): EnumResult {
@@ -186,7 +192,7 @@ function validateEnum(raw: string, format?: string): EnumResult {
   };
 }
 
-type ColorSuccessResult = SuccessResult & { value: string };
+type ColorSuccessResult = SuccessResult<string>;
 type ColorResult = ColorSuccessResult | FailResult;
 
 function validateColor(raw: string, _format?: string): ColorResult {
@@ -204,5 +210,38 @@ function validateColor(raw: string, _format?: string): ColorResult {
     raw,
     valid: false,
     message: "Invalid color",
+  };
+}
+
+type DatetimeSuccessResult = SuccessResult<string>;
+type DatetimeResult = DatetimeSuccessResult | FailResult;
+
+function validateDatetime(raw: string, format?: string): DatetimeResult {
+  return {
+    raw,
+    valid: false,
+    message: "Invalid datetime",
+  };
+}
+
+type DurationSuccessResult = SuccessResult<string>;
+type DurationResult = DurationSuccessResult | FailResult;
+
+function validateDuration(raw: string, format?: string): DurationResult {
+  return {
+    raw,
+    valid: false,
+    message: "Invalid duration",
+  };
+}
+
+type JsonSuccessResult = SuccessResult<string>;
+type JsonResult = JsonSuccessResult | FailResult;
+
+function validateJson(raw: string, format?: string): JsonResult {
+  return {
+    raw,
+    valid: false,
+    message: "Invalid json",
   };
 }

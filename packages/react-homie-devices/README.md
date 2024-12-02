@@ -22,6 +22,8 @@ import {
   Node,
   start,
 } from "@nstadigs/react-homie-devices";
+
+// This doesn't exist yet...
 import { MqttAdapter } from "@nstadigs/homie-mqttjs-adapter";
 
 function Controller() {
