@@ -17,6 +17,7 @@ import type {
 } from "../jsx-runtime.ts";
 
 import { validateValue } from "@nstadigs/homie-spec";
+import { Property } from "./Property.ts";
 
 type Container = {
   rootDevices: Record<string, Device>;
@@ -86,25 +87,13 @@ const reconciler = ReactReconciler<
     throw new Error("Text nodes are not supported");
   },
 
-  finalizeInitialChildren(
-    // instance,
-    // _type,
-    // props,
-    // rootContainer,
-    // _hostContext,
-  ) {
-    // if (instance instanceof Property) {
-    //   console.log("Finalizing property", instance.id, instance.path);
-    // }
-    // if (instance instanceof Property && instance.path != null) {
-    //   const deviceProps = props as PropertyElementProps;
-
-    //   if ((props as PropertyElementProps).onSet == null) {
-    //     rootContainer.commandHandlersByPath[instance.path] = null;
-    //   } else {
-    //     rootContainer.commandHandlersByPath[instance.path] = deviceProps.onSet;
-    //   }
-    // }
+  finalizeInitialChildren(instance, _type, props) {
+    if (instance instanceof Property) {
+      // Since prepareUpdate skips the onSet prop when comparing props, we need
+      // to set it here to make sure we bring it over even if it was the only
+      // thing that changed.
+      instance.transferable.onSet = (props as PropertyElementProps).onSet;
+    }
 
     return false;
   },
@@ -121,8 +110,10 @@ const reconciler = ReactReconciler<
       unknown
     >,
   ) {
-    const { children: _throwAway0, ...oldPropsWoChildren } = oldProps;
-    const { children: _throwAway1, ...newPropsWoChildren } = newProps;
+    const { children: _throwAway0, onSet: _1, ...oldPropsWoChildren } =
+      oldProps;
+    const { children: _throwAway1, onSet: _2, ...newPropsWoChildren } =
+      newProps;
 
     const [isShallowEqual] = shallowEqual(
       oldPropsWoChildren,
@@ -377,7 +368,6 @@ export function register(
     if (homieVersion === "5" && maybeSet !== "set") {
       return;
     }
-    debugger;
 
     const property = context.devicesById[deviceId]?.nodes[nodeId]
       ?.properties[propertyId];

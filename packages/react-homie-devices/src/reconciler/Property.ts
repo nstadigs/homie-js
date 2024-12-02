@@ -3,16 +3,22 @@ import type { Instance } from "./Instance.ts";
 import type { Node } from "./Node.ts";
 
 export class Property implements Instance {
-  instanceType = "property" as const;
+  readonly instanceType = "property" as const;
 
-  id: string;
-  datatype: string;
-  name?: string;
-  format?: string;
-  retained?: boolean;
-  path?: string;
+  readonly id: string;
+  readonly datatype: string;
+  readonly name?: string;
+  readonly format?: string;
+  readonly retained?: boolean;
 
-  onSet?: (value: any) => void;
+  transferable: {
+    // deno-lint-ignore no-explicit-any
+    onSet?: (value: any) => void;
+  } = {};
+
+  get onSet() {
+    return this.transferable.onSet;
+  }
 
   constructor(props: PropertyElementProps) {
     this.id = props.id;
@@ -20,19 +26,30 @@ export class Property implements Instance {
     this.datatype = props.datatype;
     this.format = props.format;
     this.retained = props.retained;
-    this.onSet = props.onSet;
+
+    this.transferable.onSet = this.transferable.onSet ?? props.onSet;
   }
 
   addChild() {
     throw new Error("Properties cannot have children");
   }
 
-  setParent(node: Node) {
-    this.path = `${node.deviceId}/${node.id}/${this.id}`;
-  }
+  setParent(_node: Node) {}
 
   cloneWithProps(props: PropertyElementProps) {
-    return new Property(props);
+    let nextInstance: Property;
+
+    if (
+      props.id !== this.id || props.datatype !== this.datatype ||
+      props.format !== this.format || props.retained !== this.retained
+    ) {
+      nextInstance = new Property(props);
+    } else {
+      nextInstance = this;
+    }
+
+    nextInstance.transferable = this.transferable;
+    return nextInstance;
   }
 
   toJSON() {
@@ -41,7 +58,7 @@ export class Property implements Instance {
       datatype: this.datatype,
       format: this.format,
       retained: this.retained,
-      settable: this.onSet !== undefined,
+      settable: this.transferable.onSet !== undefined,
     };
   }
 }

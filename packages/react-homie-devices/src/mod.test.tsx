@@ -43,6 +43,16 @@ Deno.test("mod", async () => {
 
   mqtt.publish(
     "homie/5/root-device/root-device-node/property-2/set",
+    "41",
+    0,
+    false,
+  );
+
+  await new Promise((resolve) => setTimeout(resolve, 1));
+
+  // Should not trigger description update, since retained will be the same
+  mqtt.publish(
+    "homie/5/root-device/root-device-node/property-2/set",
     "42",
     0,
     false,
