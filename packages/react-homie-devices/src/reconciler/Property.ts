@@ -11,9 +11,13 @@ export class Property implements Instance {
   readonly format?: string;
   readonly retained?: boolean;
 
+  path?: string;
+
   transferable: {
     // deno-lint-ignore no-explicit-any
     onSet?: (value: any) => void;
+    value?: unknown;
+    target?: unknown;
   } = {};
 
   get onSet() {
@@ -28,13 +32,17 @@ export class Property implements Instance {
     this.retained = props.retained;
 
     this.transferable.onSet = this.transferable.onSet ?? props.onSet;
+    this.transferable.value = this.transferable.value ?? props.value;
+    this.transferable.target = this.transferable.target ?? props.target;
   }
 
   addChild() {
     throw new Error("Properties cannot have children");
   }
 
-  setParent(_node: Node) {}
+  setParent(node: Node) {
+    this.path = `${node.deviceId}/${node.id}/${this.id}`;
+  }
 
   cloneWithProps(props: PropertyElementProps) {
     let nextInstance: Property;

@@ -15,11 +15,12 @@ Deno.test("mod", async () => {
             id="property-2"
             name="Property 3"
             datatype="integer"
-            retained={someValue % 2 === 0}
             onSet={(addValue) => {
               console.log("----------------------- Setting some value");
               setSomeValue((value) => value + addValue);
             }}
+            value={someValue}
+            target={someValue}
           />
         </Node>
       </Device>

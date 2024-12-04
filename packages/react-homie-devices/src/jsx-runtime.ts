@@ -24,60 +24,70 @@ export type NodeElementProps = {
 type PropertyElementPropsBase = Property & {
   id: string;
   value?: unknown;
+  target?: unknown;
   datatype: Property["datatype"];
 };
 
 type StringPropertyElementProps = PropertyElementPropsBase & {
   datatype: "string";
   value?: string;
+  target?: string;
   onSet?: (value: string) => void;
 };
 
 export type IntegerPropertyElementProps = PropertyElementPropsBase & {
   datatype: "integer";
   value?: number;
+  target?: number;
   onSet?: (value: number) => void;
 };
 
 export type FloatPropertyElementProps = PropertyElementPropsBase & {
   datatype: "float";
   value?: number;
+  target?: number;
   onSet?: (value: number) => void;
 };
 
 export type BooleanPropertyElementProps = PropertyElementPropsBase & {
   datatype: "boolean";
   value?: boolean;
+  target?: boolean;
   onSet?: (value: boolean) => void;
 };
 
 type EnumPropertyElementProps = PropertyElementPropsBase & {
   datatype: "enum";
   value?: string;
+  target?: string;
   onSet?: (value: string) => void;
 };
 
 type ColorPropertyElementProps = PropertyElementPropsBase & {
   datatype: "color";
   value?: string;
+  target?: string;
   onSet?: (value: string) => void;
 };
 
 type DatetimePropertyElementProps = PropertyElementPropsBase & {
   datatype: "datetime";
   value?: string;
+  target?: string;
   onSet?: (value: string) => void;
 };
 
 type DurationPropertyElementProps = PropertyElementPropsBase & {
   datatype: "duration";
   value?: string;
+  target?: string;
   onSet?: (value: string) => void;
 };
 
 type JsonPropertyElementProps = PropertyElementPropsBase & {
   datatype: "json";
   value?: string;
+  target?: string;
   onSet?: (value: string) => void;
 };
 

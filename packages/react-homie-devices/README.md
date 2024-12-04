@@ -111,4 +111,6 @@ start(<Controller />, new MqttAdapter({ url: "mqtt://localhost:1883" }));
 - [ ] Validation (see @nstadigs/homie-spec)
 - [x] Handle set commands
 - [ ] Last will
+  - We will have to refactor the connection logic to connect after first render.
+    We will also have to have a connection per root device.
 - [ ] and probably a lot more...

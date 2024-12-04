@@ -1,6 +1,7 @@
 import type { DeviceElementProps } from "../jsx-runtime.ts";
 import type { Instance } from "./Instance.ts";
 import { Node } from "./Node.ts";
+import fnv1a from "fnv1a";
 
 export class Device implements Instance {
   instanceType = "device" as const;
@@ -14,7 +15,6 @@ export class Device implements Instance {
   nodes: Record<string, Node>;
   parentId?: string;
   rootId?: string;
-  version: number;
 
   constructor(
     props: DeviceElementProps,
@@ -25,7 +25,20 @@ export class Device implements Instance {
     this.name = props.name ?? this.id;
     this.childDevices = childDevices ?? {};
     this.nodes = nodes ?? {};
-    this.version = Date.now();
+  }
+
+  get version(): number {
+    const obj = {
+      name: this.name,
+      type: this.type,
+      rootId: this.rootId,
+      parentId: this.parentId,
+      extensions: this.extensions,
+      children: Object.keys(this.childDevices).sort(),
+      nodes: this.nodes,
+    };
+
+    return Number(fnv1a(JSON.stringify(obj), { size: 32 }));
   }
 
   addChild(child: Instance) {
