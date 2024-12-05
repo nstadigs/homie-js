@@ -1,3 +1,4 @@
+import type { MqttAdapter } from "@nstadigs/homie-adapter";
 import type { NodeElementProps } from "../jsx-runtime.ts";
 import type { Device } from "./Device.ts";
 import type { Instance } from "./Instance.ts";
@@ -11,6 +12,7 @@ export class Node implements Instance {
   type?: string;
   deviceId?: string;
   properties: Record<string, Property>;
+  mqtt?: MqttAdapter;
 
   constructor(
     props: NodeElementProps,
@@ -30,15 +32,29 @@ export class Node implements Instance {
     this.properties[child.id] = child;
   }
 
+  commitMount() {
+    // noop
+  }
+
   setParent(device: Device) {
     this.deviceId = device.id;
+
     Object.values(this.properties).forEach((property) =>
       property.setParent(this)
     );
   }
 
-  cloneWithProps(props: NodeElementProps, keepChildren: boolean) {
-    return new Node(props, keepChildren ? this.properties : {});
+  recursivelySetMqtt(mqtt: MqttAdapter) {
+    this.mqtt = mqtt;
+
+    Object.values(this.properties).forEach((child) => child.setMqtt(mqtt));
+  }
+
+  prepareUpdate(oldProps: unknown, newProps: unknown): null | Array<unknown> {
+    return null;
+  }
+
+  commitUpdate(updatePayload: unknown[]): void {
   }
 
   toJSON() {

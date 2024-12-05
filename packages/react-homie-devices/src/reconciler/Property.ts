@@ -1,3 +1,4 @@
+import type { MqttAdapter } from "@nstadigs/homie-adapter";
 import type { PropertyElementProps } from "../jsx-runtime.ts";
 import type { Instance } from "./Instance.ts";
 import type { Node } from "./Node.ts";
@@ -12,17 +13,12 @@ export class Property implements Instance {
   readonly retained?: boolean;
 
   path?: string;
+  mqtt?: MqttAdapter;
 
-  transferable: {
-    // deno-lint-ignore no-explicit-any
-    onSet?: (value: any) => void;
-    value?: unknown;
-    target?: unknown;
-  } = {};
-
-  get onSet() {
-    return this.transferable.onSet;
-  }
+  // deno-lint-ignore no-explicit-any
+  onSet?: (value: any) => void;
+  value?: unknown;
+  target?: unknown;
 
   constructor(props: PropertyElementProps) {
     this.id = props.id;
@@ -30,34 +26,99 @@ export class Property implements Instance {
     this.datatype = props.datatype;
     this.format = props.format;
     this.retained = props.retained;
-
-    this.transferable.onSet = this.transferable.onSet ?? props.onSet;
-    this.transferable.value = this.transferable.value ?? props.value;
-    this.transferable.target = this.transferable.target ?? props.target;
+    this.onSet = props.onSet;
+    this.value = props.value;
+    this.target = props.target;
   }
 
   addChild() {
     throw new Error("Properties cannot have children");
   }
 
-  setParent(node: Node) {
-    this.path = `${node.deviceId}/${node.id}/${this.id}`;
-  }
-
-  cloneWithProps(props: PropertyElementProps) {
-    let nextInstance: Property;
-
-    if (
-      props.id !== this.id || props.datatype !== this.datatype ||
-      props.format !== this.format || props.retained !== this.retained
-    ) {
-      nextInstance = new Property(props);
-    } else {
-      nextInstance = this;
+  commitMount() {
+    if (this.value != null) {
+      this.mqtt?.publish(
+        `homie/5/${this.path}`,
+        this.value.toString(),
+        2,
+        !!this.retained,
+      );
     }
 
-    nextInstance.transferable = this.transferable;
-    return nextInstance;
+    if (this.target != null) {
+      this.mqtt?.publish(
+        `homie/5/${this.path}/$target`,
+        this.target.toString(),
+        2,
+        !!this.retained,
+      );
+    }
+  }
+
+  prepareUpdate(
+    oldProps: Record<string, unknown>,
+    newProps: Record<string, unknown>,
+  ): null | Array<unknown> {
+    const allKeys = new Set([
+      ...Object.keys(oldProps),
+      ...Object.keys(newProps),
+    ]);
+
+    const updates = [];
+
+    for (const key of allKeys) {
+      if (oldProps[key] !== newProps[key]) {
+        updates.push([key, newProps[key]]);
+      }
+    }
+
+    return updates[0] == null ? null : updates;
+  }
+
+  commitUpdate(updatePayload: [key: string, value: unknown][]): void {
+    if (updatePayload == null) {
+      return;
+    }
+
+    const valuesToUpdate = [
+      "name",
+      "datatype",
+      "format",
+      "retained",
+      "onSet",
+      "value",
+      "target",
+    ];
+
+    for (const [key, value] of updatePayload) {
+      if (key === "value") {
+        this.mqtt?.publish(
+          `homie/5/${this.path}`,
+          String(value),
+          2,
+          !!this.retained,
+        );
+      } else if (key === "target") {
+        this.mqtt?.publish(
+          `homie/5/${this.path}/$target`,
+          String(value),
+          2,
+          !!this.retained,
+        );
+      }
+
+      if (valuesToUpdate.includes(key)) {
+        (this as Record<string, unknown>)[key] = value;
+      }
+    }
+  }
+
+  setMqtt(mqtt: MqttAdapter) {
+    this.mqtt = mqtt;
+  }
+
+  setParent(node: Node) {
+    this.path = `${node.deviceId}/${node.id}/${this.id}`;
   }
 
   toJSON() {
@@ -66,7 +127,7 @@ export class Property implements Instance {
       datatype: this.datatype,
       format: this.format,
       retained: this.retained,
-      settable: this.transferable.onSet !== undefined,
+      settable: this.onSet != null,
     };
   }
 }

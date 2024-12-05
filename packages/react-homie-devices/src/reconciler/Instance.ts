@@ -11,10 +11,15 @@ export type Instance = {
   id: string;
   instanceType: string;
   addChild(child: Instance): void;
-  cloneWithProps(
-    props: Record<string, unknown>,
-    keepChildren: boolean,
-  ): Instance;
+  commitMount(): void;
+  prepareUpdate(
+    oldProps: unknown,
+    newProps: unknown,
+  ): null | Array<unknown>;
+  commitUpdate(updatePayload: unknown[]): void;
+
+  // Should return object representation as described in the Homie specification
+  // for $description
   toJSON(): object;
 };
 

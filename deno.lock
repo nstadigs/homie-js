@@ -6,17 +6,21 @@
     "jsr:@david/code-block-writer@^13.0.2": "13.0.3",
     "jsr:@deno/cache-dir@~0.10.3": "0.10.3",
     "jsr:@deno/dnt@*": "0.41.3",
+    "jsr:@deno/dnt@~0.41.3": "0.41.3",
     "jsr:@deno/graph@~0.73.1": "0.73.1",
     "jsr:@std/assert@*": "1.0.8",
     "jsr:@std/assert@0.223": "0.223.0",
     "jsr:@std/assert@0.226": "0.226.0",
     "jsr:@std/assert@^1.0.8": "1.0.8",
+    "jsr:@std/async@^1.0.8": "1.0.9",
     "jsr:@std/bytes@0.223": "0.223.0",
     "jsr:@std/bytes@^1.0.1": "1.0.4",
+    "jsr:@std/data-structures@^1.0.4": "1.0.4",
     "jsr:@std/fmt@0.223": "0.223.0",
     "jsr:@std/fmt@1": "1.0.3",
     "jsr:@std/fs@0.223": "0.223.0",
     "jsr:@std/fs@1": "1.0.5",
+    "jsr:@std/fs@^1.0.5": "1.0.5",
     "jsr:@std/fs@~0.229.3": "0.229.3",
     "jsr:@std/internal@^1.0.5": "1.0.5",
     "jsr:@std/io@0.223": "0.223.0",
@@ -24,11 +28,14 @@
     "jsr:@std/path@1": "1.0.8",
     "jsr:@std/path@1.0.0-rc.1": "1.0.0-rc.1",
     "jsr:@std/path@^1.0.7": "1.0.8",
+    "jsr:@std/path@^1.0.8": "1.0.8",
     "jsr:@std/path@~0.225.2": "0.225.2",
     "jsr:@std/testing@*": "1.0.5",
+    "jsr:@std/testing@^1.0.5": "1.0.5",
     "jsr:@std/yaml@*": "1.0.5",
     "jsr:@ts-morph/bootstrap@0.24": "0.24.0",
     "jsr:@ts-morph/common@0.24": "0.24.0",
+    "jsr:@ymjacky/mqtt5@^0.0.19": "0.0.19",
     "npm:@sindresorhus/fnv1a@*": "3.1.0",
     "npm:@types/node@*": "22.5.4",
     "npm:@types/react-reconciler@*": "0.28.8",
@@ -95,11 +102,17 @@
         "jsr:@std/internal"
       ]
     },
+    "@std/async@1.0.9": {
+      "integrity": "c6472fd0623b3f3daae023cdf7ca5535e1b721dfbf376562c0c12b3fb4867f91"
+    },
     "@std/bytes@0.223.0": {
       "integrity": "84b75052cd8680942c397c2631318772b295019098f40aac5c36cead4cba51a8"
     },
     "@std/bytes@1.0.4": {
       "integrity": "11a0debe522707c95c7b7ef89b478c13fb1583a7cfb9a85674cd2cc2e3a28abc"
+    },
+    "@std/data-structures@1.0.4": {
+      "integrity": "fa0e20c11eb9ba673417450915c750a0001405a784e2a4e0c3725031681684a0"
     },
     "@std/fmt@0.223.0": {
       "integrity": "6deb37794127dfc7d7bded2586b9fc6f5d50e62a8134846608baf71ffc1a5208"
@@ -154,7 +167,11 @@
       "integrity": "6e693cbec94c81a1ad3df668685c7ba8e20742bb10305bc7137faa5cf16d2ec4",
       "dependencies": [
         "jsr:@std/assert@^1.0.8",
-        "jsr:@std/internal"
+        "jsr:@std/async",
+        "jsr:@std/data-structures",
+        "jsr:@std/fs@^1.0.5",
+        "jsr:@std/internal",
+        "jsr:@std/path@^1.0.8"
       ]
     },
     "@std/yaml@1.0.5": {
@@ -172,6 +189,9 @@
         "jsr:@std/fs@~0.229.3",
         "jsr:@std/path@~0.225.2"
       ]
+    },
+    "@ymjacky/mqtt5@0.0.19": {
+      "integrity": "1b3c66dfeb9341d3fe2fff9623b749ed107c0d83f959e43f67cc12f39429112b"
     }
   },
   "npm": {
@@ -376,6 +396,11 @@
   },
   "workspace": {
     "members": {
+      "packages/homie-adapter-ymjacky": {
+        "dependencies": [
+          "jsr:@ymjacky/mqtt5@^0.0.19"
+        ]
+      },
       "packages/homie-client": {
         "dependencies": [
           "jsr:@nstadigs/homie-spec@*"
@@ -392,13 +417,18 @@
       "packages/homie-lgtv": {
         "dependencies": [
           "jsr:@deno/dnt@~0.41.3",
-          "jsr:@nstadigs/homie-devices@*"
+          "jsr:@nstadigs/react-homie-devices@*",
+          "npm:@types/react@^18.3.12",
+          "npm:react@^18.3.1"
         ]
       },
       "packages/react-homie-devices": {
         "dependencies": [
           "jsr:@deno/dnt@~0.41.3",
           "jsr:@nstadigs/homie-spec@*",
+          "jsr:@std/assert@^1.0.8",
+          "jsr:@std/testing@^1.0.5",
+          "npm:@sindresorhus/fnv1a@*",
           "npm:@types/react-reconciler@~0.28.8",
           "npm:@types/react@^18.3.12",
           "npm:react-reconciler@~0.29.2",

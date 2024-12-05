@@ -1,111 +1,23 @@
-import { assertEquals } from "jsr:@std/assert";
+import { assertSnapshot } from "@std/testing/snapshot";
 
 // @deno-types="npm:@types/react"
 import React, { act, useState } from "react";
 import { Device, Node, Property, register } from "../mod.ts";
-import type { MqttAdapter, OnMessageCallback } from "@nstadigs/homie-adapter";
+import { TestMqttAdapter } from "./testutils.ts";
 
-Deno.test("Initial render", async () => {
-  const mqtt = new TestMqttAdapter();
-
-  mqtt.subscribe("+/5/#");
-
+Deno.test("Initial render", async (t) => {
   // deno-lint-ignore require-await
-  const cleanUp = await act(async () => {
-    return register(<Controller />, mqtt);
+  const { cleanUp, mqtt } = await act(async () => {
+    return testRender(<Controller />);
   });
 
-  assertEquals(mqtt.events, [
-    {
-      payload: "init",
-      qos: 2,
-      retained: true,
-      topic: "homie/5/root-device/$state",
-    },
-    {
-      payload: JSON.stringify(
-        {
-          "homie": "5.0",
-          "version": 1285552645,
-          "name": "Root device",
-          "children": [],
-          "nodes": {
-            "root-device-node": {
-              "name": "root-device-node",
-              "properties": {
-                "property-2": {
-                  "name": "Property 3",
-                  "datatype": "integer",
-                  "settable": true,
-                },
-              },
-            },
-          },
-        },
-        null,
-        2,
-      ),
-      qos: 2,
-      retained: true,
-      topic: "homie/5/root-device/$description",
-    },
-    {
-      payload: "ready",
-      qos: 2,
-      retained: true,
-      topic: "homie/5/root-device/$state",
-    },
-  ]);
-
-  // // Should not trigger description update, since retained will be the same
-  // mqtt.publish(
-  //   "homie/5/root-device/root-device-node/property-2/set",
-  //   "42",
-  //   0,
-  //   false,
-  // );
-
-  // await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  // console.log("----------------------- Unregistering");
-
+  await assertSnapshot(t, mqtt.events);
   await act(cleanUp);
 });
 
-Deno.test("Set same value and target", async () => {
-  const mqtt = new TestMqttAdapter();
-
-  mqtt.subscribe("+/5/#");
-
-  // deno-lint-ignore require-await
-  const cleanUp = await act(async () => {
-    return register(<Controller />, mqtt);
-  });
-
-  mqtt.events = [];
-
-  await act(() => {
-    mqtt.publish(
-      "homie/5/root-device/root-device-node/property-2/set",
-      "0",
-      0,
-      false,
-    );
-  });
-
-  assertEquals(mqtt.events, []);
-
-  await act(cleanUp);
-});
-
-Deno.test("Set new value and target", async () => {
-  const mqtt = new TestMqttAdapter();
-
-  mqtt.subscribe("+/5/#");
-
-  // deno-lint-ignore require-await
-  const cleanUp = await act(async () => {
-    return register(<Controller />, mqtt);
+Deno.test("Set new value and target", async (t) => {
+  const { cleanUp, mqtt } = await act(() => {
+    return testRender(<Controller />);
   });
 
   mqtt.events = [];
@@ -119,116 +31,95 @@ Deno.test("Set new value and target", async () => {
     );
   });
 
-  assertEquals(mqtt.events, [
-    {
-      topic: "homie/5/root-device/root-device-node/property-2/set",
-      payload: "41",
-      qos: 0,
-      retained: false,
-    },
-    {
-      topic: "homie/5/root-device/root-device-node/property-2",
-      payload: "41",
-      qos: 2,
-      retained: false,
-    },
-    {
-      topic: "homie/5/root-device/root-device-node/property-2/$target",
-      payload: "41",
-      qos: 2,
-      retained: false,
-    },
-  ]);
-
+  await assertSnapshot(t, mqtt.events);
   await act(cleanUp);
 });
 
-export class TestMqttAdapter implements MqttAdapter {
-  messageCallbacks: Set<OnMessageCallback> = new Set();
+Deno.test("Set updates root device", async (t) => {
+  function Controller() {
+    const [rootDeviceName, setRootDeviceName] = useState("");
 
-  events: {
-    topic: string;
-    payload: string;
-    qos: 0 | 1 | 2;
-    retained: boolean;
-  }[] = [];
-
-  subscribedTopics = new Set<string>();
-
-  reset() {
-    this.messageCallbacks.clear();
-    this.subscribedTopics.clear();
-    this.events = [];
+    return (
+      <Device id="root-device" name={`${rootDeviceName}`}>
+        <Node id="root-device-node">
+          <Property
+            id="device-name-property"
+            datatype="string"
+            onSet={(name) => {
+              setRootDeviceName(name);
+            }}
+          />
+        </Node>
+        <Device id="child-device" />
+      </Device>
+    );
   }
 
-  connect() {
-    return Promise.resolve();
+  const { cleanUp, mqtt } = await act(() => {
+    return testRender(<Controller />);
+  });
+
+  mqtt.events = [];
+
+  await act(() => {
+    mqtt.publish(
+      "homie/5/root-device/root-device-node/device-name-property/set",
+      "New name",
+      0,
+      false,
+    );
+  });
+
+  await assertSnapshot(t, mqtt.events);
+  await act(cleanUp);
+});
+
+Deno.test("Set updates property", async (t) => {
+  function Controller() {
+    const [propertyName, setPropertyName] = useState("old name");
+
+    return (
+      <Device id="root-device" name={`${propertyName}`}>
+        <Node id="root-device-node">
+          <Property
+            id="property-name"
+            name={propertyName}
+            datatype="string"
+            onSet={(name) => {
+              setPropertyName(name);
+            }}
+          />
+        </Node>
+        <Device id="child-device" />
+      </Device>
+    );
   }
 
-  disconnect() {
-    return Promise.resolve();
-  }
+  const { cleanUp, mqtt } = await act(() => {
+    return testRender(<Controller />);
+  });
 
-  subscribe(topicPattern: string) {
-    this.subscribedTopics.add(topicPattern);
-    return Promise.resolve();
-  }
+  mqtt.events = [];
 
-  unsubscribe(topicPattern: string) {
-    this.subscribedTopics.delete(topicPattern);
-    return Promise.resolve();
-  }
+  await act(() => {
+    mqtt.publish(
+      "homie/5/root-device/root-device-node/property-name/set",
+      "New name",
+      0,
+      false,
+    );
+  });
 
-  publish(topic: string, payload: string, qos: 0 | 1 | 2, retained: boolean) {
-    this.events.push({ topic, payload, qos, retained });
-
-    this.messageCallbacks.forEach((callback) => {
-      if (
-        [...this.subscribedTopics].some((topicPattern) =>
-          matchesMqttTopicPattern(topic, topicPattern)
-        )
-      ) {
-        callback(topic, payload);
-      }
-    });
-    return Promise.resolve();
-  }
-
-  onMessage(callback: OnMessageCallback) {
-    this.messageCallbacks.add(callback);
-
-    return () => {
-      this.messageCallbacks.delete(callback);
-    };
-  }
-}
-
-function matchesMqttTopicPattern(topic: string, topicPattern: string) {
-  const patternParts = topicPattern.split("/");
-  const topicParts = topic.split("/");
-
-  for (let i = 0; i < patternParts.length; i++) {
-    if (patternParts[i] === "#") {
-      return true;
-    }
-
-    if (patternParts[i] === "+") {
-      continue;
-    }
-
-    if (patternParts[i] !== topicParts[i]) {
-      return false;
-    }
-  }
-
-  return patternParts.length === topicParts.length;
-}
+  await assertSnapshot(t, mqtt.events);
+  await act(cleanUp);
+});
 
 function Controller() {
   const [someValue, setSomeValue] = useState(0);
 
   return (
-    <Device id="root-device" name="Root device">
+    // TODO: Name
+    <Device id="root-device" name="0">
       <Node id="root-device-node">
         <Property
           id="property-2"
@@ -241,6 +132,15 @@ function Controller() {
           target={someValue}
         />
       </Node>
+      <Device id="child-device" />
     </Device>
   );
+}
+
+function testRender(whatToRender: React.ReactNode) {
+  // TODO: This only returns a single mqtt adapter. We should make
+  // one per root devices somehow.
+  const mqtt = new TestMqttAdapter();
+  const cleanUp = register(whatToRender, () => mqtt);
+  return { mqtt, cleanUp };
 }

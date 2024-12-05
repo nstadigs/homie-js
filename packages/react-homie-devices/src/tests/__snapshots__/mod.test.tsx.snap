@@ -1,0 +1,135 @@
+export const snapshot = {};
+
+snapshot[`Initial render 1`] = `
+[
+  {
+    payload: "0",
+    qos: 2,
+    retained: false,
+    topic: "homie/5/root-device/root-device-node/property-2",
+  },
+  {
+    payload: "0",
+    qos: 2,
+    retained: false,
+    topic: "homie/5/root-device/root-device-node/property-2/\$target",
+  },
+  {
+    payload: "init",
+    qos: 2,
+    retained: true,
+    topic: "\$state",
+  },
+  {
+    payload: '{"homie":"5.0","version":1145439745,"name":"child-device","root":"root-device","parent":"root-device","children":[],"nodes":{}}',
+    qos: 2,
+    retained: true,
+    topic: "homie/5/child-device/\$description",
+  },
+  {
+    payload: "ready",
+    qos: 2,
+    retained: true,
+    topic: "\$state",
+  },
+  {
+    payload: "init",
+    qos: 2,
+    retained: true,
+    topic: "\$state",
+  },
+  {
+    payload: '{"homie":"5.0","version":1623117270,"name":"0","children":["child-device"],"nodes":{"root-device-node":{"name":"root-device-node","properties":{"property-2":{"name":"Property 3","datatype":"integer","settable":true}}}}}',
+    qos: 2,
+    retained: true,
+    topic: "homie/5/root-device/\$description",
+  },
+  {
+    payload: "ready",
+    qos: 2,
+    retained: true,
+    topic: "\$state",
+  },
+]
+`;
+
+snapshot[`Set new value and target 1`] = `
+[
+  {
+    payload: "41",
+    qos: 0,
+    retained: false,
+    topic: "homie/5/root-device/root-device-node/property-2/set",
+  },
+  {
+    payload: "41",
+    qos: 2,
+    retained: false,
+    topic: "homie/5/root-device/root-device-node/property-2",
+  },
+  {
+    payload: "41",
+    qos: 2,
+    retained: false,
+    topic: "homie/5/root-device/root-device-node/property-2/\$target",
+  },
+]
+`;
+
+snapshot[`Set updates root device 1`] = `
+[
+  {
+    payload: "New name",
+    qos: 0,
+    retained: false,
+    topic: "homie/5/root-device/root-device-node/device-name-property/set",
+  },
+  {
+    payload: "init",
+    qos: 2,
+    retained: true,
+    topic: "homie/5/root-device/\$state",
+  },
+  {
+    payload: '{"homie":"5.0","version":172139472,"name":"New name","children":["child-device"],"nodes":{"root-device-node":{"name":"root-device-node","properties":{"device-name-property":{"name":"device-name-property","datatype":"string","settable":true}}}}}',
+    qos: 2,
+    retained: true,
+    topic: "homie/5/root-device/\$description",
+  },
+  {
+    payload: "ready",
+    qos: 2,
+    retained: true,
+    topic: "homie/5/root-device/\$state",
+  },
+]
+`;
+
+snapshot[`Set updates property 1`] = `
+[
+  {
+    payload: "New name",
+    qos: 0,
+    retained: false,
+    topic: "homie/5/root-device/root-device-node/property-name/set",
+  },
+  {
+    payload: "init",
+    qos: 2,
+    retained: true,
+    topic: "homie/5/root-device/\$state",
+  },
+  {
+    payload: '{"homie":"5.0","version":4138580612,"name":"New name","children":["child-device"],"nodes":{"root-device-node":{"name":"root-device-node","properties":{"property-name":{"name":"New name","datatype":"string","settable":true}}}}}',
+    qos: 2,
+    retained: true,
+    topic: "homie/5/root-device/\$description",
+  },
+  {
+    payload: "ready",
+    qos: 2,
+    retained: true,
+    topic: "homie/5/root-device/\$state",
+  },
+]
+`;
