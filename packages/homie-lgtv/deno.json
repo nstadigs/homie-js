@@ -4,6 +4,14 @@
   "exports": "./src/main.ts",
   "imports": {
     "@deno/dnt": "jsr:@deno/dnt@^0.41.3",
-    "homie-devices": "jsr:@nstadigs/homie-devices"
+    "react": "npm:react@^18.3.1",
+    "@types/react": "npm:@types/react@^18.3.12",
+    "react-homie-devices": "jsr:@nstadigs/react-homie-devices"
+  },
+  "compilerOptions": {
+    "types": [
+      "react",
+      "@types/react"
+    ]
   }
 }

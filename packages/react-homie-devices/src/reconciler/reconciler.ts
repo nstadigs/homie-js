@@ -7,7 +7,7 @@ import { DefaultEventPriority } from "react-reconciler/constants.js";
 import type React from "react";
 
 import { createInstance, type Instance } from "./Instance.ts";
-import { Device } from "./Device.ts";
+import type { Device } from "./Device.ts";
 import type {
   DeviceElementProps,
   NodeElementProps,
@@ -15,7 +15,7 @@ import type {
 } from "../jsx-runtime.ts";
 
 import { Container } from "./Container.ts";
-import { CreateConnectionFn } from "./Container.ts";
+import type { CreateConnectionFn } from "./Container.ts";
 
 type Element =
   | { type: "device$"; props: DeviceElementProps }

@@ -1,7 +1,12 @@
 import createLgtvClient from "npm:lgtv2";
 import { wake } from "jsr:@bukhalo/wol";
 import { createRootDevice, MqttAdapter } from "jsr:@nstadigs/homie-devices";
+import { Device, Enum, Node } from "react-homie-devices";
 import { webosUris } from "./constants.ts";
+
+// @deno-types="@types/react"
+import * as React from "react";
+
 
 class TestAdapter implements MqttAdapter {
   connect(url: string): Promise<void> {
@@ -44,6 +49,19 @@ class TestAdapter implements MqttAdapter {
   onBeforeDisconnect(callback: () => void): void {
     console.log("Setting up before disconnect callback");
   }
+}
+
+
+
+
+function Controller() {
+  const 
+
+  return (
+    <Device id="webos-controller" name="WebOS Devices Controller">
+      <DiscoveryNode />
+    </Device>
+  );
 }
 
 const device = createRootDevice("lgtv", {

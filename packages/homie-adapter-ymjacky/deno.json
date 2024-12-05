@@ -1,0 +1,8 @@
+{
+  "name": "@nstadigs/homie-adapter-ymjacky",
+  "version": "0.1.0",
+  "exports": "./src/mod.ts",
+  "imports": {
+    "@ymjacky/mqtt5": "jsr:@ymjacky/mqtt5@^0.0.19"
+  }
+}
