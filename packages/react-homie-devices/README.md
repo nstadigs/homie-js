@@ -106,11 +106,11 @@ start(<Controller />, new MqttAdapter({ url: "mqtt://localhost:1883" }));
 - [x] Send states and descriptions on updates
 - [x] Send states and descriptions on removals
 - [x] Child devices (root, parent, children)
-- [ ] Set and send property values
-- [ ] Set and send property $target values
+- [x] Set and send property values
+- [x] Set and send property $target values
 - [ ] Validation (see @nstadigs/homie-spec)
 - [x] Handle set commands
-- [ ] Last will
+- [x] Last will
   - We will have to refactor the connection logic to connect after first render.
     We will also have to have a connection per root device.
 - [ ] and probably a lot more...
